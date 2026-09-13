@@ -309,10 +309,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const ticketModal = document.getElementById('ticket-modal');
   const btnCloseModal = document.getElementById('btn-close-modal');
+  const btnReplyTicket = document.getElementById('btn-reply-ticket');
   const btnResolveTicket = document.getElementById('btn-resolve-ticket');
   const btnUseAiSuggestion = document.getElementById('btn-use-ai-suggestion');
   const modalReplyText = document.getElementById('modal-reply-text');
   const modalMessageHistory = document.getElementById('modal-message-history');
+
 
   const btnReassignModal = document.getElementById('btn-reassign-modal');
   const reassignModal = document.getElementById('reassign-modal');
