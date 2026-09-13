@@ -29,11 +29,11 @@
     <div class="header-status">
       <div class="status-indicator">
         <span class="pulse-dot green"></span>
-        <span class="status-text">Google Workspace Sync</span>
+        <span class="status-text">Microsoft 365 Sync</span>
       </div>
       <div class="status-indicator">
         <span class="pulse-dot green"></span>
-        <span class="status-text">WhatsApp API</span>
+        <span class="status-text">WhatsApp Ingestion</span>
       </div>
       <div class="status-indicator">
         <span class="pulse-dot purple"></span>
@@ -193,7 +193,7 @@
           <i data-lucide="sparkles" class="icon-purple"></i>
           <div>
             <h3>Query Ingestion & Gemini AI Simulator</h3>
-            <p>Test sending simulated client WhatsApp or Email messages to see real-time Gemini NLP parsing & auto-ticketing.</p>
+            <p>Test sending simulated client WhatsApp or Microsoft Outlook Email messages to see real-time Gemini NLP parsing & auto-ticketing.</p>
           </div>
         </div>
         <button class="btn btn-sm btn-outline" id="accordion-chevron">
@@ -209,8 +209,8 @@
               <div class="form-group flex-1">
                 <label>Channel</label>
                 <select id="sim-channel" class="select-dropdown full-width">
-                  <option value="WHATSAPP">📱 WhatsApp Webhook</option>
-                  <option value="EMAIL">✉️ Email (Google Workspace)</option>
+                  <option value="WHATSAPP">📱 WhatsApp Webhook / Extension</option>
+                  <option value="EMAIL">✉️ Email (Microsoft 365 Graph)</option>
                 </select>
               </div>
 
@@ -336,7 +336,7 @@
           </div>
 
           <div class="response-composer">
-            <label>Draft Response (Sends to Client via API)</label>
+            <label>Draft Response (Sends via Microsoft 365 / WhatsApp API)</label>
             <textarea id="modal-reply-text" rows="3" placeholder="Type your response to the client..."></textarea>
           </div>
         </div>
