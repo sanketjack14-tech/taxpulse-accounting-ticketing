@@ -1050,9 +1050,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (window.lucide) lucide.createIcons();
 
-    document.getElementById('modal-ai-suggestion').textContent = `Dear ${ticket.senderRep}, We have prepared your ${ticket.category} files. Please find them attached. This query is now complete and marked as RESOLVED.`;
+    const suggestedReply = `Dear ${ticket.senderRep}, We have prepared your ${ticket.category} files. Please find them attached. This query is now complete and marked as RESOLVED.`;
+    document.getElementById('modal-ai-suggestion').textContent = suggestedReply;
 
-    modalReplyText.value = '';
+    // Pre-fill response composer with AI draft by default
+    modalReplyText.value = suggestedReply;
     ticketModal.classList.remove('hidden');
   }
 
@@ -1069,14 +1071,13 @@ document.addEventListener('DOMContentLoaded', () => {
     btnReplyTicket.addEventListener('click', () => {
       if (!selectedTicketId) return;
 
-      const replyText = modalReplyText.value.trim();
-      if (!replyText) {
-        alert("Please draft an intermediate response or request clarification before sending.");
-        return;
-      }
-
       const ticket = tickets.find(t => t.id === selectedTicketId);
       if (!ticket) return;
+
+      let replyText = modalReplyText.value.trim();
+      if (!replyText) {
+        replyText = `Dear ${ticket.senderRep}, your query regarding ${ticket.category} is currently being processed by our team. We will share full details shortly.`;
+      }
 
       const currentStaff = STAFF_MEMBERS.find(s => s.id === ticket.assignedStaffId);
       const staffName = currentStaff ? `${currentStaff.name} (${currentStaff.dept})` : 'Accountant';
@@ -1100,17 +1101,18 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Reply & Close (Mark RESOLVED) Button Handler
-  btnResolveTicket.addEventListener('click', () => {
-    if (!selectedTicketId) return;
+  if (btnResolveTicket) {
+    btnResolveTicket.addEventListener('click', () => {
+      if (!selectedTicketId) return;
 
-    const reply = modalReplyText.value.trim();
-    if (!reply) {
-      alert("Please draft or attach the final solution document before marking as RESOLVED.");
-      return;
-    }
+      const ticket = tickets.find(t => t.id === selectedTicketId);
+      if (!ticket) return;
 
-    const ticket = tickets.find(t => t.id === selectedTicketId);
-    if (ticket) {
+      let reply = modalReplyText.value.trim();
+      if (!reply) {
+        reply = `Dear ${ticket.senderRep}, We have completed your request regarding ${ticket.category}. Please find the relevant documents attached. This query is now marked as RESOLVED.`;
+      }
+
       ticket.status = 'RESOLVED';
       ticket.resolvedAt = new Date();
       if (ticket.isMultiIntent && ticket.subTickets) {
@@ -1127,15 +1129,15 @@ document.addEventListener('DOMContentLoaded', () => {
         timestamp: formatTime(new Date()),
         content: reply
       });
-    }
 
-    ticketModal.classList.add('hidden');
-    updateMetrics();
-    renderTickets();
-    renderStaffWorkload();
+      ticketModal.classList.add('hidden');
+      updateMetrics();
+      renderTickets();
+      renderStaffWorkload();
 
-    alert(`✅ Solution sent to ${ticket.clientName} via ${ticket.channel} API! Ticket #${ticket.id} marked as RESOLVED.`);
-  });
+      alert(`✅ Solution sent to ${ticket.clientName} via ${ticket.channel} API! Ticket #${ticket.id} marked as RESOLVED.`);
+    });
+  }
 
   // --- 8. REAL-TIME TICKING ENGINE ---
   setInterval(() => {
@@ -1148,3 +1150,4 @@ document.addEventListener('DOMContentLoaded', () => {
   renderTickets();
   renderStaffWorkload();
 });
+
