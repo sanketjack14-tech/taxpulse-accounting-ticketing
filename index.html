@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaxPulse - Accounting Pseudo-Ticketing System</title>
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="light-theme">
+
+  <!-- Top Header -->
+  <header class="app-header">
+    <div class="header-brand">
+      <div class="logo-icon">
+        <i data-lucide="receipt"></i>
+      </div>
+      <div>
+        <h1 class="brand-title">TaxPulse <span>Ticketing</span></h1>
+        <p class="brand-subtitle">Accounting & Bookkeeping SLA Dashboard • 25 Members</p>
+      </div>
+    </div>
+
+    <div class="header-status">
+      <div class="status-indicator">
+        <span class="pulse-dot green"></span>
+        <span class="status-text">Google Workspace Sync</span>
+      </div>
+      <div class="status-indicator">
+        <span class="pulse-dot green"></span>
+        <span class="status-text">WhatsApp API</span>
+      </div>
+      <div class="status-indicator">
+        <span class="pulse-dot purple"></span>
+        <span class="status-text">Gemini NLP Engine</span>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button id="btn-fast-forward" class="btn btn-outline" title="Simulate 3 hours passing">
+        <i data-lucide="fast-forward"></i>
+        <span>Fast-Forward +3 Hrs</span>
+      </button>
+      <button id="btn-toggle-sim-top" class="btn btn-primary">
+        <i data-lucide="sparkles"></i>
+        <span>Open AI Simulator</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="app-container">
+    
+    <!-- Top Metrics Row (Clickable to Filter Queue) -->
+    <section class="metrics-grid">
+      <div class="metric-card active" data-filter-status="ALL" id="card-total" title="Click to view all queries">
+        <div class="metric-header">
+          <span class="metric-label">Total Today</span>
+          <div class="metric-icon blue"><i data-lucide="inbox"></i></div>
+        </div>
+        <div class="metric-value" id="metric-total">24</div>
+        <div class="metric-subtext">Click to view all</div>
+      </div>
+
+      <div class="metric-card" data-filter-status="PENDING" id="card-pending" title="Click to filter Pending queries">
+        <div class="metric-header">
+          <span class="metric-label">Active Pending</span>
+          <div class="metric-icon amber"><i data-lucide="clock"></i></div>
+        </div>
+        <div class="metric-value text-amber" id="metric-pending">7</div>
+        <div class="metric-subtext">Awaiting team response</div>
+      </div>
+
+      <div class="metric-card highlight-danger" data-filter-status="OVERDUE" id="card-overdue" title="Click to filter SLA Breached queries">
+        <div class="metric-header">
+          <span class="metric-label">SLA Breached / Overdue</span>
+          <div class="metric-icon red"><i data-lucide="alert-circle"></i></div>
+        </div>
+        <div class="metric-value text-red" id="metric-overdue">2</div>
+        <div class="metric-subtext text-red font-semibold">Escalated to Team Leads</div>
+      </div>
+
+      <div class="metric-card" data-filter-status="RESOLVED" id="card-resolved" title="Click to filter Resolved queries">
+        <div class="metric-header">
+          <span class="metric-label">Resolved</span>
+          <div class="metric-icon green"><i data-lucide="check-circle-2"></i></div>
+        </div>
+        <div class="metric-value text-green" id="metric-resolved">15</div>
+        <div class="metric-subtext">Avg TAT: <strong>1h 22m</strong></div>
+      </div>
+    </section>
+
+    <!-- Workspace Main Section -->
+    <div class="workspace-layout">
+      
+      <!-- Left Main Column: Ticket Queue -->
+      <section class="tickets-panel">
+        
+        <!-- Filter Controls Bar -->
+        <div class="queue-controls">
+          <div class="search-box">
+            <i data-lucide="search"></i>
+            <input type="text" id="input-search" placeholder="Search client name, ticket ID, query text...">
+          </div>
+
+          <div class="filter-group">
+            <span class="filter-lbl">Channel:</span>
+            <div class="pill-tabs" id="channel-tabs">
+              <button class="pill active" data-channel="ALL">All</button>
+              <button class="pill" data-channel="WHATSAPP"><i data-lucide="message-circle" class="icon-wa"></i> WhatsApp</button>
+              <button class="pill" data-channel="EMAIL"><i data-lucide="mail" class="icon-email"></i> Email</button>
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <span class="filter-lbl">Status:</span>
+            <select id="select-status" class="select-dropdown">
+              <option value="ALL">All Statuses</option>
+              <option value="PENDING">Pending Response</option>
+              <option value="OVERDUE">SLA Breached / Overdue</option>
+              <option value="RESOLVED">Resolved</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <span class="filter-lbl">Dept:</span>
+            <select id="select-dept" class="select-dropdown">
+              <option value="ALL">All Departments</option>
+              <option value="Direct Tax">Direct Tax</option>
+              <option value="GST & Indirect Tax">GST & Indirect Tax</option>
+              <option value="Accounts & Bookkeeping">Accounts & Bookkeeping</option>
+              <option value="Audit & Compliance">Audit & Compliance</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Ticket Queue Header -->
+        <div class="queue-header">
+          <h2>Active Queries (<span id="ticket-count">7</span>)</h2>
+          <span class="click-hint"><i data-lucide="mouse-pointer-click"></i> Click any ticket to view details & respond</span>
+        </div>
+
+        <!-- Ticket List Container -->
+        <div class="tickets-list" id="tickets-container">
+          <!-- Injected dynamically -->
+        </div>
+      </section>
+
+      <!-- Right Column: Staff Workload Overview -->
+      <aside class="side-panel">
+        <div class="card workload-card">
+          <div class="card-header">
+            <h3><i data-lucide="users"></i> Staff Workload (25 Members)</h3>
+            <span class="sub-badge">Live Status</span>
+          </div>
+          <div class="workload-list" id="workload-container">
+            <!-- Injected dynamically -->
+          </div>
+        </div>
+      </aside>
+
+    </div>
+
+    <!-- Bottom Accordion: Simulator Section -->
+    <section class="simulator-accordion" id="simulator-section">
+      <div class="accordion-header" id="accordion-toggle">
+        <div class="accordion-title">
+          <i data-lucide="sparkles" class="icon-purple"></i>
+          <div>
+            <h3>Query Ingestion & Gemini AI Simulator</h3>
+            <p>Test sending simulated client WhatsApp or Email messages to see real-time Gemini NLP parsing & auto-ticketing.</p>
+          </div>
+        </div>
+        <button class="btn btn-sm btn-outline" id="accordion-chevron">
+          <span id="acc-state-txt">Expand Simulator</span>
+          <i data-lucide="chevron-down"></i>
+        </button>
+      </div>
+
+      <div class="accordion-body hidden" id="accordion-content">
+        <div class="sim-grid">
+          <div class="sim-controls">
+            <div class="form-row">
+              <div class="form-group flex-1">
+                <label>Channel</label>
+                <select id="sim-channel" class="select-dropdown full-width">
+                  <option value="WHATSAPP">📱 WhatsApp Webhook</option>
+                  <option value="EMAIL">✉️ Email (Google Workspace)</option>
+                </select>
+              </div>
+
+              <div class="form-group flex-1">
+                <label>Select Client</label>
+                <select id="sim-client" class="select-dropdown full-width">
+                  <option value="XYZ Logistics Pvt Ltd">XYZ Logistics (Rahul M.)</option>
+                  <option value="Apex Retailers India">Apex Retailers (Priya S.)</option>
+                  <option value="Mehta Tech Solutions">Mehta Tech (Vikram K.)</option>
+                  <option value="Sunrise Healthcare">Sunrise Healthcare (Anita R.)</option>
+                  <option value="Unknown Contact">+91 98201 44512 (New Contact)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Quick Presets (Click to test):</label>
+              <div class="preset-chips">
+                <button class="chip" data-preset="tds">TDS Statement Request</button>
+                <button class="chip" data-preset="bank">Bank Statement Last Year</button>
+                <button class="chip" data-preset="gst">GST 3B Recon Issue</button>
+                <button class="chip" data-preset="notice">IT Notice Response</button>
+                <button class="chip" data-preset="casual">Casual / Personal Text</button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Raw Client Message Text</label>
+              <textarea id="sim-message" class="textarea-input" rows="2" placeholder="Type client message in English or Hinglish..."></textarea>
+            </div>
+
+            <button id="btn-run-simulation" class="btn btn-primary">
+              <i data-lucide="zap"></i>
+              <span>Ingest & Run Gemini AI Parsing</span>
+            </button>
+          </div>
+
+          <!-- AI Output Box -->
+          <div class="sim-results">
+            <label class="ai-box-lbl"><i data-lucide="cpu"></i> Gemini AI Live Output View</label>
+            <div class="ai-output-card" id="ai-output">
+              <div class="ai-field"><span class="lbl">Query Intent:</span> <strong id="ai-intent">Waiting for input...</strong></div>
+              <div class="ai-field"><span class="lbl">Items Requested:</span> <span id="ai-items">-</span></div>
+              <div class="ai-field"><span class="lbl">Complexity Rating:</span> <span id="ai-complexity" class="badge">-</span></div>
+              <div class="ai-field"><span class="lbl">Calculated TAT:</span> <strong id="ai-tat" class="text-amber">-</strong></div>
+              <div class="ai-field"><span class="lbl">Assigned Staff Member:</span> <span id="ai-assigned">-</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Ticket Reply Modal Drawer -->
+  <div class="modal-overlay hidden" id="ticket-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="badge" id="modal-channel-badge">WhatsApp</span>
+          <h2 id="modal-ticket-id">Ticket #104</h2>
+        </div>
+        <button class="modal-close" id="btn-close-modal"><i data-lucide="x"></i></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="ticket-meta-bar">
+          <div>
+            <span class="meta-label">Client Name</span>
+            <div class="meta-val" id="modal-client">XYZ Logistics</div>
+          </div>
+          <div>
+            <span class="meta-label">Category / Intent</span>
+            <div class="meta-val" id="modal-intent">TDS Statement Request</div>
+          </div>
+          <div>
+            <span class="meta-label">Assigned Member</span>
+            <div class="meta-val" id="modal-assigned">Rahul M. (Direct Tax)</div>
+          </div>
+          <div>
+            <span class="meta-label">SLA Status</span>
+            <div class="meta-val" id="modal-sla">3h 42m remaining</div>
+          </div>
+        </div>
+
+        <div class="chat-thread-container">
+          <div class="thread-date">Incoming Message Log</div>
+          <div class="message-bubble incoming">
+            <div class="bubble-header">
+              <span class="sender-name" id="modal-sender">Client Rep</span>
+              <span class="timestamp" id="modal-timestamp">10:14 AM</span>
+            </div>
+            <div class="bubble-content" id="modal-content">
+              Hi Rahul, please send us last year's Q3 TDS computation and payment receipt.
+            </div>
+          </div>
+
+          <div class="ai-suggestion-box">
+            <div class="suggestion-header">
+              <i data-lucide="sparkles"></i> <strong>Gemini Suggested Reply:</strong>
+            </div>
+            <p id="modal-ai-suggestion">"Dear Client, We have generated your Q3 TDS statement and payment receipts. Please find them attached. Let us know if you need further assistance."</p>
+            <button class="btn-use-suggestion" id="btn-use-ai-suggestion">Insert Template</button>
+          </div>
+
+          <div class="response-composer">
+            <label>Draft Response (Sends to Client via API)</label>
+            <textarea id="modal-reply-text" rows="3" placeholder="Type your response to the client..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-outline" id="btn-reassign-modal">
+          <i data-lucide="user-check"></i> Reassign Member
+        </button>
+        <button class="btn btn-emerald" id="btn-resolve-ticket">
+          <i data-lucide="check"></i> Send Reply & Resolve Ticket
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
