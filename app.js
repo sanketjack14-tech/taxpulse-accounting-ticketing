@@ -1220,14 +1220,28 @@ document.addEventListener('DOMContentLoaded', () => {
     const suggestedReply = `Dear ${ticket.senderRep}, We have prepared your ${ticket.category} files. Please find them attached. This query is now complete and marked as RESOLVED.`;
     document.getElementById('modal-ai-suggestion').textContent = suggestedReply;
 
+    const aiSuggestionContainer = document.getElementById('ai-suggestion-container');
+    if (aiSuggestionContainer) {
+      aiSuggestionContainer.classList.remove('hidden');
+    }
+
     // Pre-fill response composer with AI draft by default
     modalReplyText.value = suggestedReply;
     ticketModal.classList.remove('hidden');
   }
 
+  const btnCloseAiSuggestion = document.getElementById('btn-close-ai-suggestion');
+  const aiSuggestionContainer = document.getElementById('ai-suggestion-container');
+  if (btnCloseAiSuggestion && aiSuggestionContainer) {
+    btnCloseAiSuggestion.addEventListener('click', () => {
+      aiSuggestionContainer.classList.add('hidden');
+    });
+  }
+
   btnCloseModal.addEventListener('click', () => {
     ticketModal.classList.add('hidden');
   });
+
 
   btnUseAiSuggestion.addEventListener('click', () => {
     modalReplyText.value = document.getElementById('modal-ai-suggestion').textContent;

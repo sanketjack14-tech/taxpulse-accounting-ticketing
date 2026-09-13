@@ -372,18 +372,24 @@
             <!-- Dynamic History Bubbles Injected Here -->
           </div>
 
-          <div class="ai-suggestion-box">
+          <div class="ai-suggestion-box" id="ai-suggestion-container">
             <div class="suggestion-header">
-              <i data-lucide="sparkles"></i> <strong>Gemini Suggested Solution Reply:</strong>
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <i data-lucide="sparkles"></i> <strong>Gemini Suggested Solution Reply:</strong>
+              </div>
+              <button class="btn-dismiss-suggestion" id="btn-close-ai-suggestion" title="Dismiss / Close suggestion box">
+                <i data-lucide="x"></i>
+              </button>
             </div>
             <p id="modal-ai-suggestion">"Dear Client, We have prepared your Q3 TDS statement and payment receipts. Please find them attached. This query is now complete and marked as RESOLVED."</p>
             <button class="btn-use-suggestion" id="btn-use-ai-suggestion">Insert Template</button>
           </div>
 
           <div class="response-composer">
-            <label>Draft Final Solution / Document Answer (Sent to Client)</label>
+            <label><i data-lucide="edit-3" style="width: 12px; height: 12px;"></i> Draft Final Solution / Document Answer (Sent to Client)</label>
             <textarea id="modal-reply-text" rows="3" placeholder="Type solution details or attach documents..."></textarea>
           </div>
+
         </div>
       </div>
 
