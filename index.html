@@ -42,22 +42,58 @@
     </div>
 
     <div class="header-actions">
+      <!-- Active User Profile Badge -->
+      <div class="user-badge" id="active-user-badge">
+        <div class="avatar-sm" id="active-user-avatar">RK</div>
+        <div class="user-info">
+          <span class="user-name" id="active-user-name">Rajesh Khanna</span>
+          <span class="user-role" id="active-user-role">Team Leader / Partner</span>
+        </div>
+        <button id="btn-open-login" class="btn btn-sm btn-outline" title="Switch User / Role Login">
+          <i data-lucide="user-check"></i> <span>Switch Role</span>
+        </button>
+      </div>
+
       <button id="btn-fast-forward" class="btn btn-outline" title="Simulate 3 hours passing">
         <i data-lucide="fast-forward"></i>
-        <span>Fast-Forward +3 Hrs</span>
+        <span>+3 Hrs</span>
       </button>
       <button id="btn-toggle-sim-top" class="btn btn-primary">
         <i data-lucide="sparkles"></i>
-        <span>Open AI Simulator</span>
+        <span>AI Simulator</span>
       </button>
     </div>
   </header>
 
   <!-- Main Container -->
   <main class="app-container">
+
+    <!-- Guided Demonstration Banner for Nested Queries -->
+    <div class="nested-demo-card">
+      <div class="demo-card-header">
+        <div class="demo-title">
+          <i data-lucide="git-merge" style="color: #2563eb;"></i>
+          <strong>Interactive Demonstration: Nested Multi-Department Query Workflow</strong>
+        </div>
+        <span class="sub-link" id="btn-open-login-link">Change Login Account</span>
+      </div>
+      <p class="demo-subtext">Click any persona below to instantly switch login access and demonstrate nested ticket hand-offs:</p>
+      <div class="demo-steps">
+        <button class="step-chip" id="demo-step-1" data-login-role="STAFF_RAHUL">
+          1️⃣ Login as <strong>Rahul Sharma (Direct Tax)</strong> → Process TDS Sub-Ticket A & Hand off
+        </button>
+        <button class="step-chip" id="demo-step-2" data-login-role="STAFF_PRIYA">
+          2️⃣ Login as <strong>Priya Sundaram (GST Lead)</strong> → Process GST Sub-Ticket B & Close Query
+        </button>
+        <button class="step-chip active" id="demo-step-3" data-login-role="TEAM_LEADER">
+          3️⃣ Login as <strong>Team Leader (Rajesh Khanna)</strong> → Full Audit History & 25-Staff View
+        </button>
+      </div>
+    </div>
     
     <!-- Top Metrics Row (Clickable to Filter Queue) -->
     <section class="metrics-grid">
+
       <div class="metric-card active" data-filter-status="ALL" id="card-total" title="Click to view all queries">
         <div class="metric-header">
           <span class="metric-label" id="lbl-total-metric">Total (Selected Date)</span>
@@ -388,6 +424,122 @@
   </div>
 
 
+  <!-- Team Leader & User Multi-Role Login Modal -->
+  <div class="modal-overlay hidden" id="login-modal">
+    <div class="modal-card" style="max-width: 580px;">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="badge badge-purple"><i data-lucide="shield-check"></i> Authentication Portal</span>
+          <h2>TaxPulse Login & Role Switcher</h2>
+        </div>
+        <button class="modal-close" id="btn-close-login-modal"><i data-lucide="x"></i></button>
+      </div>
+
+      <div class="modal-body">
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 14px;">
+          Select a team profile to demonstrate user access, ticket assignment, and multi-department nested query responses:
+        </p>
+
+        <!-- Role Cards Grid -->
+        <div class="role-grid">
+          
+          <!-- Team Leader Card -->
+          <div class="role-card active" data-role-id="TEAM_LEADER">
+            <div class="role-card-header">
+              <div class="avatar-md bg-purple">RK</div>
+              <div>
+                <span class="role-badge leader">Team Leader / Partner</span>
+                <div class="role-name">Rajesh Khanna</div>
+                <div class="role-desc">Full Firm Supervision • 25 Staff Workload • SLA Control</div>
+              </div>
+            </div>
+            <div class="role-features">
+              <span>✓ All 25 Staff Members</span>
+              <span>✓ Reassign & Escalations</span>
+              <span>✓ Full Audit Trail</span>
+            </div>
+          </div>
+
+          <!-- Staff 1: Rahul Sharma (Direct Tax) -->
+          <div class="role-card" data-role-id="STAFF_RAHUL">
+            <div class="role-card-header">
+              <div class="avatar-md bg-blue">RS</div>
+              <div>
+                <span class="role-badge staff">Direct Tax Specialist</span>
+                <div class="role-name">Rahul Sharma</div>
+                <div class="role-desc">Senior Tax Associate • Step 1 TDS Sub-Tickets</div>
+              </div>
+            </div>
+            <div class="role-features">
+              <span>✓ Direct Tax Queue</span>
+              <span>✓ Process Sub-Ticket A</span>
+              <span>✓ Hand off to GST Lead</span>
+            </div>
+          </div>
+
+          <!-- Staff 2: Priya Sundaram (GST Lead) -->
+          <div class="role-card" data-role-id="STAFF_PRIYA">
+            <div class="role-card-header">
+              <div class="avatar-md bg-amber">PS</div>
+              <div>
+                <span class="role-badge staff">GST & Indirect Tax Lead</span>
+                <div class="role-name">Priya Sundaram</div>
+                <div class="role-desc">GST Lead • Step 2 Final Response & Closure</div>
+              </div>
+            </div>
+            <div class="role-features">
+              <span>✓ Indirect Tax Queue</span>
+              <span>✓ Process Sub-Ticket B</span>
+              <span>✓ Send Reply & Close</span>
+            </div>
+          </div>
+
+          <!-- Client View: Alok Nath -->
+          <div class="role-card" data-role-id="CLIENT_ALOK">
+            <div class="role-card-header">
+              <div class="avatar-md bg-green">AN</div>
+              <div>
+                <span class="role-badge client">Client Representative</span>
+                <div class="role-name">Mr. Alok Nath (XYZ Logistics)</div>
+                <div class="role-desc">External Portal View • Query Ingestion Test</div>
+              </div>
+            </div>
+            <div class="role-features">
+              <span>✓ View Client Receipts</span>
+              <span>✓ Track Pending SLAs</span>
+              <span>✓ WhatsApp/Email Logs</span>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="login-form-divider">
+          <span>Or sign in with corporate credentials</span>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label>Corporate Email</label>
+            <input type="email" id="login-email" class="select-dropdown full-width" value="rajesh.khanna@taxpulse.in" placeholder="name@taxpulse.in">
+          </div>
+          <div class="form-group flex-1">
+            <label>Password</label>
+            <input type="password" id="login-password" class="select-dropdown full-width" value="••••••••••••" placeholder="Password">
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-outline" id="btn-cancel-login">Cancel</button>
+        <button class="btn btn-primary" id="btn-confirm-login">
+          <i data-lucide="log-in"></i> Launch Access Portal
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script src="app.js"></script>
 </body>
 </html>
+

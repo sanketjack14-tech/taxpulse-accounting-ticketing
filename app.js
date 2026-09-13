@@ -267,6 +267,52 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   ];
 
+  const USER_ROLES = {
+    TEAM_LEADER: {
+      id: 'TEAM_LEADER',
+      name: 'Rajesh Khanna',
+      role: 'Team Leader / Partner',
+      dept: 'ALL',
+      staffId: null,
+      avatar: 'RK',
+      bgClass: 'bg-purple',
+      email: 'rajesh.khanna@taxpulse.in'
+    },
+    STAFF_RAHUL: {
+      id: 'STAFF_RAHUL',
+      name: 'Rahul Sharma',
+      role: 'Senior Tax Associate (Direct Tax)',
+      dept: 'Direct Tax',
+      staffId: 'S1',
+      avatar: 'RS',
+      bgClass: 'bg-blue',
+      email: 'rahul.sharma@taxpulse.in'
+    },
+    STAFF_PRIYA: {
+      id: 'STAFF_PRIYA',
+      name: 'Priya Sundaram',
+      role: 'GST Lead (Indirect Tax)',
+      dept: 'GST & Indirect Tax',
+      staffId: 'S2',
+      avatar: 'PS',
+      bgClass: 'bg-amber',
+      email: 'priya.sundaram@taxpulse.in'
+    },
+    CLIENT_ALOK: {
+      id: 'CLIENT_ALOK',
+      name: 'Mr. Alok Nath',
+      role: 'Client (XYZ Logistics)',
+      dept: 'CLIENT',
+      staffId: null,
+      avatar: 'AN',
+      bgClass: 'bg-green',
+      email: 'alok@xyzlogistics.com'
+    }
+  };
+
+  let currentUser = USER_ROLES.TEAM_LEADER;
+  let selectedLoginRoleId = 'TEAM_LEADER';
+
   let activeFilters = {
     search: '',
     channel: 'ALL',
@@ -315,7 +361,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const modalReplyText = document.getElementById('modal-reply-text');
   const modalMessageHistory = document.getElementById('modal-message-history');
 
-
   const btnReassignModal = document.getElementById('btn-reassign-modal');
   const reassignModal = document.getElementById('reassign-modal');
   const btnCloseReassignModal = document.getElementById('btn-close-reassign-modal');
@@ -335,6 +380,104 @@ document.addEventListener('DOMContentLoaded', () => {
   const staffDirectoryModal = document.getElementById('staff-directory-modal');
   const btnCloseStaffModal = document.getElementById('btn-close-staff-modal');
   const allStaffContainer = document.getElementById('all-staff-container');
+
+  // Header User Badge & Login Modal
+  const activeUserAvatar = document.getElementById('active-user-avatar');
+  const activeUserName = document.getElementById('active-user-name');
+  const activeUserRole = document.getElementById('active-user-role');
+  const btnOpenLogin = document.getElementById('btn-open-login');
+  const btnOpenLoginLink = document.getElementById('btn-open-login-link');
+  const loginModal = document.getElementById('login-modal');
+  const btnCloseLoginModal = document.getElementById('btn-close-login-modal');
+  const btnCancelLogin = document.getElementById('btn-cancel-login');
+  const btnConfirmLogin = document.getElementById('btn-confirm-login');
+
+  // Role Switcher Logic
+  function switchUserRole(roleId, showNotification = true) {
+    const roleObj = USER_ROLES[roleId] || USER_ROLES.TEAM_LEADER;
+    currentUser = roleObj;
+
+    activeUserAvatar.textContent = roleObj.avatar;
+    activeUserAvatar.className = `avatar-sm ${roleObj.bgClass}`;
+    activeUserName.textContent = roleObj.name;
+    activeUserRole.textContent = roleObj.role;
+
+    // Update Guided Step Chips in Banner
+    document.querySelectorAll('.step-chip').forEach(chip => {
+      const chipRole = chip.getAttribute('data-login-role');
+      if (chipRole === roleId) chip.classList.add('active');
+      else chip.classList.remove('active');
+    });
+
+    // Adjust Dashboard Filters according to Persona Access
+    if (roleObj.id === 'TEAM_LEADER') {
+      activeFilters.staffId = null;
+      activeFilters.dept = 'ALL';
+      selectDept.value = 'ALL';
+    } else if (roleObj.id === 'STAFF_RAHUL') {
+      activeFilters.staffId = 'S1';
+      activeFilters.dept = 'Direct Tax';
+      selectDept.value = 'Direct Tax';
+    } else if (roleObj.id === 'STAFF_PRIYA') {
+      activeFilters.staffId = 'S2';
+      activeFilters.dept = 'GST & Indirect Tax';
+      selectDept.value = 'GST & Indirect Tax';
+    } else if (roleObj.id === 'CLIENT_ALOK') {
+      activeFilters.staffId = null;
+      activeFilters.search = 'xyz logistics';
+      inputSearch.value = 'XYZ Logistics';
+    }
+
+    updateMetrics();
+    renderTickets();
+    renderStaffWorkload();
+
+    if (showNotification) {
+      alert(`🔑 Logged in as ${roleObj.name} (${roleObj.role})!\nDashboard view updated to match access permissions.`);
+    }
+  }
+
+  // Guided Step Banner Listeners
+  document.querySelectorAll('.step-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const roleId = chip.getAttribute('data-login-role');
+      if (roleId) switchUserRole(roleId);
+    });
+  });
+
+  // Login Modal Handlers
+  function openLoginModal() {
+    loginModal.classList.remove('hidden');
+  }
+
+  function closeLoginModal() {
+    loginModal.classList.add('hidden');
+  }
+
+  if (btnOpenLogin) btnOpenLogin.addEventListener('click', openLoginModal);
+  if (btnOpenLoginLink) btnOpenLoginLink.addEventListener('click', openLoginModal);
+  if (btnCloseLoginModal) btnCloseLoginModal.addEventListener('click', closeLoginModal);
+  if (btnCancelLogin) btnCancelLogin.addEventListener('click', closeLoginModal);
+
+  document.querySelectorAll('.role-card').forEach(card => {
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.role-card').forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+      selectedLoginRoleId = card.getAttribute('data-role-id');
+      const emailInput = document.getElementById('login-email');
+      if (emailInput && USER_ROLES[selectedLoginRoleId]) {
+        emailInput.value = USER_ROLES[selectedLoginRoleId].email;
+      }
+    });
+  });
+
+  if (btnConfirmLogin) {
+    btnConfirmLogin.addEventListener('click', () => {
+      closeLoginModal();
+      switchUserRole(selectedLoginRoleId);
+    });
+  }
+
 
   // --- 3. ACCORDION CONTROLS ---
   function toggleAccordion(open = null) {

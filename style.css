@@ -954,3 +954,191 @@ body.light-theme {
   display: flex;
   justify-content: space-between;
 }
+
+/* User Profile Badge in Header */
+.user-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+}
+.avatar-sm {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.7rem;
+}
+.user-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+.user-name { font-weight: 700; color: var(--text-main); font-size: 0.8rem; }
+.user-role { font-size: 0.65rem; color: var(--text-muted); }
+
+/* Guided Demonstration Banner for Nested Cases */
+.nested-demo-card {
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--color-blue);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.demo-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.demo-title {
+  font-size: 0.88rem;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.demo-subtext {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+.demo-steps {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+.step-chip {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+.step-chip:hover {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: var(--color-blue);
+}
+.step-chip.active {
+  background: #eff6ff;
+  border-color: var(--color-blue);
+  color: var(--color-blue);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(37,99,235,0.12);
+}
+
+/* Login Modal Role Selection Grid */
+.role-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.role-card {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.role-card:hover {
+  background: #fff;
+  border-color: var(--accent-primary);
+  box-shadow: var(--shadow-hover);
+}
+.role-card.active {
+  border-color: var(--accent-primary) !important;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px var(--accent-primary), 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.role-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar-md {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #fff;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+.bg-purple { background: #6d28d9; }
+.bg-blue { background: #2563eb; }
+.bg-amber { background: #d97706; }
+.bg-green { background: #059669; }
+
+.role-badge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 1px 5px;
+  border-radius: 3px;
+  display: inline-block;
+  margin-bottom: 2px;
+}
+.role-badge.leader { background: #f3e8ff; color: #6d28d9; }
+.role-badge.staff { background: #eff6ff; color: #2563eb; }
+.role-badge.client { background: #f0fdf4; color: #059669; }
+
+.role-name { font-weight: 700; font-size: 0.85rem; color: var(--text-main); }
+.role-desc { font-size: 0.7rem; color: var(--text-muted); }
+
+.role-features {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.68rem;
+  color: var(--text-dim);
+  border-top: 1px solid var(--border-color);
+  padding-top: 6px;
+}
+
+.login-form-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 12px 0 8px 0;
+  color: var(--text-dim);
+  font-size: 0.72rem;
+}
+.login-form-divider::before, .login-form-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid var(--border-color);
+}
+.login-form-divider span {
+  padding: 0 8px;
+}
+
