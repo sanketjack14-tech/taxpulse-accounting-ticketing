@@ -17,8 +17,8 @@
   <!-- Top Header -->
   <header class="app-header">
     <div class="header-brand">
-      <div class="logo-icon">
-        <i data-lucide="receipt"></i>
+      <div class="logo-icon" style="font-size: 1.25rem; font-weight: 800;">
+        ₹
       </div>
       <div>
         <h1 class="brand-title">TaxPulse <span>Ticketing</span></h1>
@@ -60,7 +60,7 @@
     <section class="metrics-grid">
       <div class="metric-card active" data-filter-status="ALL" id="card-total" title="Click to view all queries">
         <div class="metric-header">
-          <span class="metric-label">Total Today</span>
+          <span class="metric-label" id="lbl-total-metric">Total (Selected Date)</span>
           <div class="metric-icon blue"><i data-lucide="inbox"></i></div>
         </div>
         <div class="metric-value" id="metric-total">24</div>
@@ -101,11 +101,24 @@
       <!-- Left Main Column: Ticket Queue -->
       <section class="tickets-panel">
         
-        <!-- Filter Controls Bar -->
+        <!-- Filter Controls Bar with Date Selector -->
         <div class="queue-controls">
           <div class="search-box">
             <i data-lucide="search"></i>
             <input type="text" id="input-search" placeholder="Search client name, ticket ID, query text...">
+          </div>
+
+          <div class="filter-group">
+            <span class="filter-lbl">Date:</span>
+            <select id="select-date-preset" class="select-dropdown">
+              <option value="TODAY" selected>Today</option>
+              <option value="YESTERDAY">Yesterday</option>
+              <option value="LAST_7_DAYS">Last 7 Days</option>
+              <option value="LAST_30_DAYS">Last 30 Days</option>
+              <option value="ALL_TIME">All Time</option>
+              <option value="CUSTOM">Custom Date...</option>
+            </select>
+            <input type="date" id="input-custom-date" class="input-date hidden">
           </div>
 
           <div class="filter-group">
@@ -157,7 +170,7 @@
         </div>
       </section>
 
-      <!-- Right Column: Staff Workload Overview (Clickable Members) -->
+      <!-- Right Column: Staff Workload Overview -->
       <aside class="side-panel">
         <div class="card workload-card">
           <div class="card-header">

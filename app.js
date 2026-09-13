@@ -45,6 +45,8 @@ document.addEventListener('DOMContentLoaded', () => {
     'Unknown Contact': { rep: 'Unregistered Contact', email: 'unknown@external.com', phone: '+91 98201 44512', assignedStaffId: 'S1', dept: 'Direct Tax' }
   };
 
+  const now = new Date();
+
   let tickets = [
     {
       id: 'TICK-1081',
@@ -55,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
       category: 'TDS Statement Request',
       complexity: 'Low',
       tatHours: 4,
-      createdAt: new Date(Date.now() - 35 * 60 * 1000),
+      createdAt: new Date(now.getTime() - 35 * 60 * 1000), // Today
       status: 'PENDING',
       assignedStaffId: 'S1',
       dept: 'Direct Tax',
@@ -70,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
       category: 'GST 3B Recon Issue',
       complexity: 'Medium',
       tatHours: 8,
-      createdAt: new Date(Date.now() - 6 * 60 * 60 * 1000 - 45 * 60 * 1000),
+      createdAt: new Date(now.getTime() - 6 * 60 * 60 * 1000 - 45 * 60 * 1000), // Today
       status: 'PENDING',
       assignedStaffId: 'S2',
       dept: 'GST & Indirect Tax',
@@ -85,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
       category: 'IT Notice Response',
       complexity: 'High',
       tatHours: 24,
-      createdAt: new Date(Date.now() - 26 * 60 * 60 * 1000), // OVERDUE
+      createdAt: new Date(now.getTime() - 26 * 60 * 60 * 1000), // Yesterday
       status: 'PENDING',
       assignedStaffId: 'S4',
       dept: 'Audit & Compliance',
@@ -100,9 +102,9 @@ document.addEventListener('DOMContentLoaded', () => {
       category: 'Bank Statement Request',
       complexity: 'Low',
       tatHours: 4,
-      createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
+      createdAt: new Date(now.getTime() - 2 * 60 * 60 * 1000), // Today
       status: 'RESOLVED',
-      resolvedAt: new Date(Date.now() - 30 * 60 * 1000),
+      resolvedAt: new Date(now.getTime() - 30 * 60 * 1000),
       assignedStaffId: 'S3',
       dept: 'Accounts & Bookkeeping',
       itemsRequested: ['SBI Bank Statement FY24-25']
@@ -116,7 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
       category: 'Advance Tax Computation',
       complexity: 'Medium',
       tatHours: 8,
-      createdAt: new Date(Date.now() - 10 * 60 * 60 * 1000), // OVERDUE
+      createdAt: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000), // 3 days ago (Last 7 Days)
       status: 'PENDING',
       assignedStaffId: 'S5',
       dept: 'Direct Tax',
@@ -129,7 +131,9 @@ document.addEventListener('DOMContentLoaded', () => {
     channel: 'ALL',
     status: 'ALL',
     dept: 'ALL',
-    staffId: null // Added staffId filter
+    staffId: null,
+    datePreset: 'TODAY',
+    customDate: null
   };
 
   let selectedTicketId = null;
@@ -148,6 +152,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const channelTabs = document.getElementById('channel-tabs');
   const selectStatus = document.getElementById('select-status');
   const selectDept = document.getElementById('select-dept');
+  const selectDatePreset = document.getElementById('select-date-preset');
+  const inputCustomDate = document.getElementById('input-custom-date');
 
   const btnFastForward = document.getElementById('btn-fast-forward');
   const btnRunSimulation = document.getElementById('btn-run-simulation');
@@ -269,13 +275,52 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
-  // --- 5. RENDER & METRICS LOGIC ---
+  // --- 5. DATE FILTER HELPER ---
+  function isDateMatch(ticketDate) {
+    const today = new Date();
+    const tDate = new Date(ticketDate);
+
+    if (activeFilters.datePreset === 'ALL_TIME') return true;
+
+    if (activeFilters.datePreset === 'TODAY') {
+      return tDate.toDateString() === today.toDateString();
+    }
+
+    if (activeFilters.datePreset === 'YESTERDAY') {
+      const yesterday = new Date(today);
+      yesterday.setDate(today.getDate() - 1);
+      return tDate.toDateString() === yesterday.toDateString();
+    }
+
+    if (activeFilters.datePreset === 'LAST_7_DAYS') {
+      const sevenDaysAgo = new Date(today);
+      sevenDaysAgo.setDate(today.getDate() - 7);
+      return tDate >= sevenDaysAgo;
+    }
+
+    if (activeFilters.datePreset === 'LAST_30_DAYS') {
+      const thirtyDaysAgo = new Date(today);
+      thirtyDaysAgo.setDate(today.getDate() - 30);
+      return tDate >= thirtyDaysAgo;
+    }
+
+    if (activeFilters.datePreset === 'CUSTOM' && activeFilters.customDate) {
+      const custom = new Date(activeFilters.customDate);
+      return tDate.toDateString() === custom.toDateString();
+    }
+
+    return true;
+  }
+
+  // --- 6. RENDER & METRICS LOGIC ---
 
   function updateMetrics() {
-    const total = tickets.length;
-    const pending = tickets.filter(t => t.status === 'PENDING').length;
-    const overdue = tickets.filter(t => isTicketOverdue(t) && t.status === 'PENDING').length;
-    const resolved = tickets.filter(t => t.status === 'RESOLVED').length;
+    const dateFiltered = tickets.filter(t => isDateMatch(t.createdAt));
+
+    const total = dateFiltered.length;
+    const pending = dateFiltered.filter(t => t.status === 'PENDING').length;
+    const overdue = dateFiltered.filter(t => isTicketOverdue(t) && t.status === 'PENDING').length;
+    const resolved = dateFiltered.filter(t => t.status === 'RESOLVED').length;
 
     metricTotal.textContent = total;
     metricPending.textContent = pending;
@@ -285,9 +330,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function isTicketOverdue(ticket) {
     if (ticket.status === 'RESOLVED') return false;
-    const now = new Date();
+    const nowTime = new Date();
     const expiryTime = new Date(ticket.createdAt.getTime() + ticket.tatHours * 60 * 60 * 1000);
-    return now > expiryTime;
+    return nowTime > expiryTime;
   }
 
   function getSlaDisplay(ticket) {
@@ -295,9 +340,9 @@ document.addEventListener('DOMContentLoaded', () => {
       return { text: 'RESOLVED', class: 'badge-green' };
     }
 
-    const now = new Date();
+    const nowTime = new Date();
     const expiryTime = new Date(ticket.createdAt.getTime() + ticket.tatHours * 60 * 60 * 1000);
-    const diffMs = expiryTime - now;
+    const diffMs = expiryTime - nowTime;
 
     if (diffMs <= 0) {
       const overdueMs = Math.abs(diffMs);
@@ -330,7 +375,6 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderTickets() {
     updateMetricCardActiveState();
 
-    // Staff filter badge handling
     if (activeFilters.staffId) {
       const staffObj = STAFF_MEMBERS.find(s => s.id === activeFilters.staffId);
       if (staffObj) {
@@ -342,6 +386,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const filtered = tickets.filter(t => {
+      const dateMatch = isDateMatch(t.createdAt);
       const searchMatch = !activeFilters.search || 
         t.clientName.toLowerCase().includes(activeFilters.search) ||
         t.messageText.toLowerCase().includes(activeFilters.search) ||
@@ -356,7 +401,7 @@ document.addEventListener('DOMContentLoaded', () => {
       else if (activeFilters.status === 'OVERDUE') statusMatch = t.status === 'PENDING' && isTicketOverdue(t);
       else if (activeFilters.status === 'RESOLVED') statusMatch = t.status === 'RESOLVED';
 
-      return searchMatch && channelMatch && deptMatch && staffMatch && statusMatch;
+      return dateMatch && searchMatch && channelMatch && deptMatch && staffMatch && statusMatch;
     });
 
     ticketCount.textContent = filtered.length;
@@ -365,7 +410,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ticketsContainer.innerHTML = `
         <div style="text-align: center; padding: 40px; color: var(--text-muted); background: #fff; border-radius: 6px; border: 1px solid var(--border-color);">
           <i data-lucide="inbox" style="width: 36px; height: 36px; opacity: 0.4;"></i>
-          <p style="margin-top: 8px; font-size: 0.85rem;">No matching tickets found for current filters.</p>
+          <p style="margin-top: 8px; font-size: 0.85rem;">No matching tickets found for selected date & filters.</p>
         </div>
       `;
       lucide.createIcons();
@@ -416,7 +461,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     lucide.createIcons();
 
-    // Make ticket cards clickable
     document.querySelectorAll('.ticket-card').forEach(card => {
       card.addEventListener('click', () => {
         const id = card.getAttribute('data-id');
@@ -433,7 +477,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }).sort((a, b) => b.pendingCount - a.pendingCount);
 
     workloadContainer.innerHTML = staffWorkload.slice(0, 8).map(s => `
-      <div class="workload-item ${activeFilters.staffId === s.id ? 'active' : ''}" data-staff-id="${s.id}" title="Click to filter tickets assigned to ${s.name}">
+      <div class="workload-item ${activeFilters.staffId === s.id ? 'active' : ''}" data-staff-id="${s.id}">
         <div class="staff-info">
           <div class="avatar">${s.name.split(' ').map(n=>n[0]).join('')}</div>
           <div>
@@ -449,7 +493,6 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
     `).join('');
 
-    // Attach click listeners to staff workload cards
     workloadContainer.querySelectorAll('.workload-item').forEach(item => {
       item.addEventListener('click', () => {
         const id = item.getAttribute('data-staff-id');
@@ -495,7 +538,25 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // --- 6. EVENT HANDLERS ---
+  // --- 7. EVENT HANDLERS ---
+
+  // Date Preset Selector
+  selectDatePreset.addEventListener('change', (e) => {
+    activeFilters.datePreset = e.target.value;
+    if (e.target.value === 'CUSTOM') {
+      inputCustomDate.classList.remove('hidden');
+    } else {
+      inputCustomDate.classList.add('hidden');
+    }
+    updateMetrics();
+    renderTickets();
+  });
+
+  inputCustomDate.addEventListener('change', (e) => {
+    activeFilters.customDate = e.target.value;
+    updateMetrics();
+    renderTickets();
+  });
 
   // Metric Box Clicks
   metricCards.forEach(card => {
@@ -660,7 +721,7 @@ document.addEventListener('DOMContentLoaded', () => {
     alert(`✅ Response sent to ${ticket.clientName} via ${ticket.channel} API! Ticket marked as RESOLVED.`);
   });
 
-  // --- 7. REAL-TIME TICKING ENGINE ---
+  // --- 8. REAL-TIME TICKING ENGINE ---
   setInterval(() => {
     renderTickets();
     updateMetrics();
