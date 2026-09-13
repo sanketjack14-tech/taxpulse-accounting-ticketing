@@ -5,6 +5,12 @@ document.addEventListener('DOMContentLoaded', () => {
     lucide.createIcons();
   }
 
+  function formatTime(dateObj) {
+    if (!dateObj) return '';
+    const d = new Date(dateObj);
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
   // --- 1. DATA MODELS & INITIAL STATE ---
 
   const STAFF_MEMBERS = [
@@ -85,6 +91,20 @@ document.addEventListener('DOMContentLoaded', () => {
           status: 'PENDING',
           itemsRequested: ['GSTR-3B ITC Recon Table']
         }
+      ],
+      historyLogs: [
+        {
+          type: 'client',
+          sender: 'Mr. Alok Nath (Client)',
+          timestamp: formatTime(new Date(now.getTime() - 45 * 60 * 1000)),
+          content: 'Hi Rahul, please send our Q3 TDS computation statement AND also check why our August GSTR-3B ITC reconciliation has a mismatch.'
+        },
+        {
+          type: 'auto-ack',
+          sender: 'TaxPulse System (Auto-Ack)',
+          timestamp: formatTime(new Date(now.getTime() - 45 * 60 * 1000 + 1000)),
+          content: 'Dear Mr. Alok Nath, your query regarding Multi-Dept (TDS + GST Split) has been received & logged as #TICK-1080. Multi-department sub-tickets assigned to Rahul Sharma (Direct Tax) and Priya Sundaram (GST & Indirect Tax). TAT: 8h.'
+        }
       ]
     },
     {
@@ -100,7 +120,21 @@ document.addEventListener('DOMContentLoaded', () => {
       status: 'PENDING',
       assignedStaffId: 'S1',
       dept: 'Direct Tax',
-      itemsRequested: ['Q3 TDS Statement', 'Challan Receipts']
+      itemsRequested: ['Q3 TDS Statement', 'Challan Receipts'],
+      historyLogs: [
+        {
+          type: 'client',
+          sender: 'Mr. Alok Nath (Client)',
+          timestamp: formatTime(new Date(now.getTime() - 35 * 60 * 1000)),
+          content: 'Hi Rahul, please share last year Q3 TDS computation statement and payment receipt urgently for filing returns.'
+        },
+        {
+          type: 'auto-ack',
+          sender: 'TaxPulse System (Auto-Ack)',
+          timestamp: formatTime(new Date(now.getTime() - 35 * 60 * 1000 + 1000)),
+          content: 'Dear Mr. Alok Nath, your query regarding TDS Statement Request has been received & assigned to Rahul Sharma (Direct Tax). Ticket #TICK-1081. Estimated TAT: 4h.'
+        }
+      ]
     },
     {
       id: 'TICK-1082',
@@ -115,7 +149,27 @@ document.addEventListener('DOMContentLoaded', () => {
       status: 'PENDING',
       assignedStaffId: 'S2',
       dept: 'GST & Indirect Tax',
-      itemsRequested: ['GSTR-3B ITC Audit', '2B Recon Table']
+      itemsRequested: ['GSTR-3B ITC Audit', '2B Recon Table'],
+      historyLogs: [
+        {
+          type: 'client',
+          sender: 'Ms. Sunita Roy (Client)',
+          timestamp: formatTime(new Date(now.getTime() - 6 * 60 * 60 * 1000 - 45 * 60 * 1000)),
+          content: 'Dear Priya, we noticed a discrepancy in GSTR-3B recon for August 2026. Please check ITC eligibility and confirm.'
+        },
+        {
+          type: 'auto-ack',
+          sender: 'TaxPulse System (Auto-Ack)',
+          timestamp: formatTime(new Date(now.getTime() - 6 * 60 * 60 * 1000 - 45 * 60 * 1000 + 1000)),
+          content: 'Dear Ms. Sunita Roy, your email regarding GST 3B Recon Issue has been received & assigned to Suresh Kumar (GST & Indirect Tax). Ticket #TICK-1082. Estimated TAT: 8h.'
+        },
+        {
+          type: 'reassign',
+          sender: 'System / Lead Reassignment',
+          timestamp: formatTime(new Date(now.getTime() - 4 * 60 * 60 * 1000)),
+          content: 'Reassigned from Suresh Kumar to Priya Sundaram (GST Lead) for senior escalation.'
+        }
+      ]
     },
     {
       id: 'TICK-1083',
@@ -130,7 +184,21 @@ document.addEventListener('DOMContentLoaded', () => {
       status: 'PENDING',
       assignedStaffId: 'S4',
       dept: 'Audit & Compliance',
-      itemsRequested: ['Notice Analysis', 'Reply Draft Sec 143(1)']
+      itemsRequested: ['Notice Analysis', 'Reply Draft Sec 143(1)'],
+      historyLogs: [
+        {
+          type: 'client',
+          sender: 'Dr. Vivek Sharma (Client)',
+          timestamp: formatTime(new Date(now.getTime() - 26 * 60 * 60 * 1000)),
+          content: 'Anita, we received an Income Tax Notice under Sec 143(1) for FY 2023-24. Please review and advise response draft.'
+        },
+        {
+          type: 'auto-ack',
+          sender: 'TaxPulse System (Auto-Ack)',
+          timestamp: formatTime(new Date(now.getTime() - 26 * 60 * 60 * 1000 + 1000)),
+          content: 'Dear Dr. Vivek Sharma, your query regarding IT Notice Response has been received & assigned to Anita Rao (Audit & Compliance). Ticket #TICK-1083. Estimated TAT: 24h.'
+        }
+      ]
     },
     {
       id: 'TICK-1084',
@@ -146,7 +214,27 @@ document.addEventListener('DOMContentLoaded', () => {
       resolvedAt: new Date(now.getTime() - 30 * 60 * 1000),
       assignedStaffId: 'S3',
       dept: 'Accounts & Bookkeeping',
-      itemsRequested: ['SBI Bank Statement FY24-25']
+      itemsRequested: ['SBI Bank Statement FY24-25'],
+      historyLogs: [
+        {
+          type: 'client',
+          sender: 'Mr. Rohan Mehta (Client)',
+          timestamp: formatTime(new Date(now.getTime() - 2 * 60 * 60 * 1000)),
+          content: 'Vikram, please provide the audited bank statement of SBI account for FY 2024-25.'
+        },
+        {
+          type: 'auto-ack',
+          sender: 'TaxPulse System (Auto-Ack)',
+          timestamp: formatTime(new Date(now.getTime() - 2 * 60 * 60 * 1000 + 1000)),
+          content: 'Dear Mr. Rohan Mehta, your email regarding Bank Statement Request has been received & assigned to Vikram Mehta (Accounts & Bookkeeping). Ticket #TICK-1084. Estimated TAT: 4h.'
+        },
+        {
+          type: 'solution',
+          sender: 'Vikram Mehta (Bookkeeping Head)',
+          timestamp: formatTime(new Date(now.getTime() - 30 * 60 * 1000)),
+          content: 'Dear Mr. Rohan Mehta, Please find attached the audited SBI bank statement for FY 2024-25. Marked as RESOLVED.'
+        }
+      ]
     },
     {
       id: 'TICK-1085',
@@ -161,7 +249,21 @@ document.addEventListener('DOMContentLoaded', () => {
       status: 'PENDING',
       assignedStaffId: 'S5',
       dept: 'Direct Tax',
-      itemsRequested: ['Advance Tax Sheet Q2']
+      itemsRequested: ['Advance Tax Sheet Q2'],
+      historyLogs: [
+        {
+          type: 'client',
+          sender: 'Mr. Ramesh Patel (Client)',
+          timestamp: formatTime(new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000)),
+          content: 'Karan, need the Advance Tax calculation sheet for Q2 before tomorrow morning.'
+        },
+        {
+          type: 'auto-ack',
+          sender: 'TaxPulse System (Auto-Ack)',
+          timestamp: formatTime(new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000 + 1000)),
+          content: 'Dear Mr. Ramesh Patel, your WhatsApp query regarding Advance Tax Computation has been received & assigned to Karan Patel (Direct Tax). Ticket #TICK-1085. Estimated TAT: 8h.'
+        }
+      ]
     }
   ];
 
@@ -210,6 +312,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnResolveTicket = document.getElementById('btn-resolve-ticket');
   const btnUseAiSuggestion = document.getElementById('btn-use-ai-suggestion');
   const modalReplyText = document.getElementById('modal-reply-text');
+  const modalMessageHistory = document.getElementById('modal-message-history');
+
+  const btnReassignModal = document.getElementById('btn-reassign-modal');
+  const reassignModal = document.getElementById('reassign-modal');
+  const btnCloseReassignModal = document.getElementById('btn-close-reassign-modal');
+  const btnCancelReassign = document.getElementById('btn-cancel-reassign');
+  const btnConfirmReassign = document.getElementById('btn-confirm-reassign');
+  const selectReassignStaff = document.getElementById('select-reassign-staff');
 
   const subTicketsSection = document.getElementById('sub-tickets-section');
   const subTicketsList = document.getElementById('sub-tickets-list');
@@ -278,7 +388,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const hasBank = textLower.includes('bank') || textLower.includes('statement') || textLower.includes('passbook');
     const hasNotice = textLower.includes('notice') || textLower.includes('sec 143') || textLower.includes('audit');
 
-    // Multi-Intent Detection
     if ((hasTds && hasGst) || (hasTds && hasNotice) || (hasGst && hasBank)) {
       isMultiIntent = true;
       category = 'Multi-Dept (TDS + GST Split)';
@@ -496,7 +605,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <p style="margin-top: 8px; font-size: 0.85rem;">No matching tickets found for selected date & filters.</p>
         </div>
       `;
-      lucide.createIcons();
+      if (window.lucide) lucide.createIcons();
       return;
     }
 
@@ -540,14 +649,14 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="ticket-actions">
             <button class="btn btn-sm ${t.status === 'RESOLVED' ? 'btn-outline' : 'btn-primary'} btn-view-ticket" data-id="${t.id}">
               <i data-lucide="${t.status === 'RESOLVED' ? 'check' : 'message-square'}" style="width: 11px;"></i>
-              <span>${t.status === 'RESOLVED' ? 'View' : 'Respond'}</span>
+              <span>${t.status === 'RESOLVED' ? 'View' : 'Inspect Log & Respond'}</span>
             </button>
           </div>
         </div>
       `;
     }).join('');
 
-    lucide.createIcons();
+    if (window.lucide) lucide.createIcons();
 
     document.querySelectorAll('.ticket-card').forEach(card => {
       card.addEventListener('click', () => {
@@ -726,8 +835,11 @@ document.addEventListener('DOMContentLoaded', () => {
       alert("ℹ️ Gemini AI detected this as a Personal Chat. Filtered into private staff sandbox & excluded from SLA metrics.");
     }
 
+    const newTicketId = `TICK-${Math.floor(1086 + Math.random() * 100)}`;
+    const currentTime = formatTime(new Date());
+
     const newTicket = {
-      id: `TICK-${Math.floor(1086 + Math.random() * 100)}`,
+      id: newTicketId,
       channel: channel,
       clientName: clientName,
       senderRep: aiResult.clientInfo.rep,
@@ -741,13 +853,82 @@ document.addEventListener('DOMContentLoaded', () => {
       dept: aiResult.isMultiIntent ? 'Multi-Department' : aiResult.assignedStaff.dept,
       itemsRequested: aiResult.itemsRequested,
       isMultiIntent: aiResult.isMultiIntent,
-      subTickets: aiResult.subTickets
+      subTickets: aiResult.subTickets,
+      historyLogs: [
+        {
+          type: 'client',
+          sender: `${aiResult.clientInfo.rep} (${clientName})`,
+          timestamp: currentTime,
+          content: messageText
+        },
+        {
+          type: 'auto-ack',
+          sender: 'TaxPulse System (Auto-Ack)',
+          timestamp: currentTime,
+          content: `Dear ${aiResult.clientInfo.rep}, your query regarding ${aiResult.category} has been received & assigned to ${aiResult.isMultiIntent ? 'Multiple Departments' : aiResult.assignedStaff.name + ' (' + aiResult.assignedStaff.dept + ')'}. Ticket #${newTicketId}. Estimated TAT: ${aiResult.tatHours}h.`
+        }
+      ]
     };
 
     tickets.unshift(newTicket);
     updateMetrics();
     renderTickets();
     renderStaffWorkload();
+  });
+
+  // Reassign Modal Logic
+  btnReassignModal.addEventListener('click', () => {
+    if (!selectedTicketId) return;
+    const ticket = tickets.find(t => t.id === selectedTicketId);
+    if (!ticket) return;
+
+    selectReassignStaff.innerHTML = STAFF_MEMBERS.map(s => `
+      <option value="${s.id}" ${s.id === ticket.assignedStaffId ? 'selected' : ''}>
+        ${s.name} (${s.dept} - ${s.role})
+      </option>
+    `).join('');
+
+    reassignModal.classList.remove('hidden');
+  });
+
+  function closeReassignModal() {
+    reassignModal.classList.add('hidden');
+  }
+
+  btnCloseReassignModal.addEventListener('click', closeReassignModal);
+  btnCancelReassign.addEventListener('click', closeReassignModal);
+
+  btnConfirmReassign.addEventListener('click', () => {
+    if (!selectedTicketId) return;
+    const ticket = tickets.find(t => t.id === selectedTicketId);
+    if (!ticket) return;
+
+    const newStaffId = selectReassignStaff.value;
+    const oldStaff = STAFF_MEMBERS.find(s => s.id === ticket.assignedStaffId);
+    const newStaff = STAFF_MEMBERS.find(s => s.id === newStaffId);
+
+    if (newStaff) {
+      ticket.assignedStaffId = newStaff.id;
+      if (!ticket.isMultiIntent) {
+        ticket.dept = newStaff.dept;
+      }
+
+      const currentTime = formatTime(new Date());
+      if (!ticket.historyLogs) ticket.historyLogs = [];
+
+      ticket.historyLogs.push({
+        type: 'reassign',
+        sender: 'System / Lead Reassignment',
+        timestamp: currentTime,
+        content: `Reassigned ticket from ${oldStaff ? oldStaff.name : 'Previous Member'} to ${newStaff.name} (${newStaff.dept} - ${newStaff.role}).`
+      });
+
+      closeReassignModal();
+      openTicketModal(ticket.id);
+      updateMetrics();
+      renderTickets();
+      renderStaffWorkload();
+    }
   });
 
   // Modal Functions
@@ -786,11 +967,45 @@ document.addEventListener('DOMContentLoaded', () => {
       subTicketsSection.classList.add('hidden');
     }
 
-    document.getElementById('modal-sender').textContent = ticket.senderRep;
-    document.getElementById('modal-timestamp').textContent = new Date(ticket.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    document.getElementById('modal-content').textContent = ticket.messageText;
+    // Render Message History & Activity Audit Trail
+    if (ticket.historyLogs && ticket.historyLogs.length > 0) {
+      modalMessageHistory.innerHTML = ticket.historyLogs.map(log => {
+        let icon = 'message-square';
+        let senderColor = 'var(--text-main)';
+        
+        if (log.type === 'client') {
+          icon = 'user';
+        } else if (log.type === 'auto-ack') {
+          icon = 'bot';
+          senderColor = 'var(--color-green)';
+        } else if (log.type === 'reassign') {
+          icon = 'arrow-right-left';
+          senderColor = 'var(--color-blue)';
+        } else if (log.type === 'solution') {
+          icon = 'check-circle-2';
+          senderColor = 'var(--color-green)';
+        }
 
-    document.getElementById('modal-ai-suggestion').textContent = `Dear ${ticket.senderRep}, We have received your query regarding ${ticket.category}. Our respective department teams have been assigned and will provide responses within their specific TAT windows.`;
+        return `
+          <div class="history-item ${log.type}">
+            <div class="history-meta">
+              <span class="history-sender" style="color: ${senderColor};">
+                <i data-lucide="${icon}" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle;"></i>
+                ${log.sender}
+              </span>
+              <span class="history-time" style="font-size: 0.7rem; color: var(--text-dim);">${log.timestamp}</span>
+            </div>
+            <div class="history-body" style="font-size: 0.78rem; margin-top: 3px; color: var(--text-muted);">${log.content}</div>
+          </div>
+        `;
+      }).join('');
+    } else {
+      modalMessageHistory.innerHTML = `<div class="history-item client"><div class="history-body">No history logs available.</div></div>`;
+    }
+
+    if (window.lucide) lucide.createIcons();
+
+    document.getElementById('modal-ai-suggestion').textContent = `Dear ${ticket.senderRep}, We have prepared your ${ticket.category} files. Please find them attached. This query is now complete and marked as RESOLVED.`;
 
     modalReplyText.value = '';
     ticketModal.classList.remove('hidden');
@@ -809,7 +1024,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const reply = modalReplyText.value.trim();
     if (!reply) {
-      alert("Please enter a response message before resolving.");
+      alert("Please draft or attach the final solution document before marking as RESOLVED.");
       return;
     }
 
@@ -820,6 +1035,17 @@ document.addEventListener('DOMContentLoaded', () => {
       if (ticket.isMultiIntent && ticket.subTickets) {
         ticket.subTickets.forEach(st => st.status = 'RESOLVED');
       }
+
+      const currentStaff = STAFF_MEMBERS.find(s => s.id === ticket.assignedStaffId);
+      const staffName = currentStaff ? `${currentStaff.name} (${currentStaff.dept})` : 'Accountant';
+
+      if (!ticket.historyLogs) ticket.historyLogs = [];
+      ticket.historyLogs.push({
+        type: 'solution',
+        sender: staffName,
+        timestamp: formatTime(new Date()),
+        content: reply
+      });
     }
 
     ticketModal.classList.add('hidden');
@@ -827,7 +1053,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderTickets();
     renderStaffWorkload();
 
-    alert(`✅ Response sent to ${ticket.clientName} via ${ticket.channel} API! Ticket marked as RESOLVED.`);
+    alert(`✅ Solution sent to ${ticket.clientName} via ${ticket.channel} API! Ticket #${ticket.id} marked as RESOLVED.`);
   });
 
   // --- 8. REAL-TIME TICKING ENGINE ---

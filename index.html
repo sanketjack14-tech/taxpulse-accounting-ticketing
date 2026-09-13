@@ -73,7 +73,7 @@
           <div class="metric-icon amber"><i data-lucide="clock"></i></div>
         </div>
         <div class="metric-value text-amber" id="metric-pending">7</div>
-        <div class="metric-subtext">Awaiting team response</div>
+        <div class="metric-subtext">Auto-Ack Sent • TAT Clock Running</div>
       </div>
 
       <div class="metric-card highlight-danger" data-filter-status="OVERDUE" id="card-overdue" title="Click to filter SLA Breached queries">
@@ -134,9 +134,9 @@
             <span class="filter-lbl">Status:</span>
             <select id="select-status" class="select-dropdown">
               <option value="ALL">All Statuses</option>
-              <option value="PENDING">Pending Response</option>
+              <option value="PENDING">Pending Response (TAT Running)</option>
               <option value="OVERDUE">SLA Breached / Overdue</option>
-              <option value="RESOLVED">Resolved</option>
+              <option value="RESOLVED">Final Solution Sent (Resolved)</option>
             </select>
           </div>
 
@@ -161,7 +161,7 @@
               <button id="btn-clear-staff-filter" class="btn-icon-clear" title="Clear Staff Filter"><i data-lucide="x"></i></button>
             </div>
           </div>
-          <span class="click-hint"><i data-lucide="mouse-pointer-click"></i> Click any ticket to view details & respond</span>
+          <span class="click-hint"><i data-lucide="mouse-pointer-click"></i> Click any ticket to inspect log & send solution</span>
         </div>
 
         <!-- Ticket List Container -->
@@ -285,6 +285,28 @@
     </div>
   </div>
 
+  <!-- Reassign Staff Modal -->
+  <div class="modal-overlay hidden" id="reassign-modal">
+    <div class="modal-card" style="max-width: 440px;">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <h2>Reassign Staff Member</h2>
+        </div>
+        <button class="modal-close" id="btn-close-reassign-modal"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">Select a new team member to assign this ticket to:</p>
+        <select id="select-reassign-staff" class="select-dropdown full-width" style="padding: 8px; font-size: 0.85rem;">
+          <!-- Populated dynamically with 25 members -->
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" id="btn-cancel-reassign">Cancel</button>
+        <button class="btn btn-primary" id="btn-confirm-reassign">Confirm Reassignment</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Ticket Reply Modal Drawer -->
   <div class="modal-overlay hidden" id="ticket-modal">
     <div class="modal-card">
@@ -326,29 +348,27 @@
           </div>
         </div>
 
+        <!-- Full Message History & Activity Audit Trail -->
         <div class="chat-thread-container">
-          <div class="thread-date">Incoming Message Log</div>
-          <div class="message-bubble incoming">
-            <div class="bubble-header">
-              <span class="sender-name" id="modal-sender">Client Rep</span>
-              <span class="timestamp" id="modal-timestamp">10:14 AM</span>
-            </div>
-            <div class="bubble-content" id="modal-content">
-              Hi Rahul, please send us last year's Q3 TDS computation and payment receipt.
-            </div>
+          <div class="history-header">
+            <i data-lucide="history"></i> <strong>Message History & Activity Audit Trail</strong>
+          </div>
+          
+          <div class="message-history-list" id="modal-message-history">
+            <!-- Dynamic History Bubbles Injected Here -->
           </div>
 
           <div class="ai-suggestion-box">
             <div class="suggestion-header">
-              <i data-lucide="sparkles"></i> <strong>Gemini Suggested Reply:</strong>
+              <i data-lucide="sparkles"></i> <strong>Gemini Suggested Solution Reply:</strong>
             </div>
-            <p id="modal-ai-suggestion">"Dear Client, We have generated your Q3 TDS statement and payment receipts. Please find them attached. Let us know if you need further assistance."</p>
+            <p id="modal-ai-suggestion">"Dear Client, We have prepared your Q3 TDS statement and payment receipts. Please find them attached. This query is now complete and marked as RESOLVED."</p>
             <button class="btn-use-suggestion" id="btn-use-ai-suggestion">Insert Template</button>
           </div>
 
           <div class="response-composer">
-            <label>Draft Response (Sends via Microsoft 365 / WhatsApp API)</label>
-            <textarea id="modal-reply-text" rows="3" placeholder="Type your response to the client..."></textarea>
+            <label>Draft Final Solution / Document Answer (Sent to Client)</label>
+            <textarea id="modal-reply-text" rows="3" placeholder="Type solution details or attach documents..."></textarea>
           </div>
         </div>
       </div>
@@ -358,7 +378,7 @@
           <i data-lucide="user-check"></i> Reassign Member
         </button>
         <button class="btn btn-emerald" id="btn-resolve-ticket">
-          <i data-lucide="check"></i> Send Reply & Resolve Ticket
+          <i data-lucide="send"></i> Send Solution & Mark RESOLVED
         </button>
       </div>
     </div>
