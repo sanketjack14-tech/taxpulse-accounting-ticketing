@@ -586,10 +586,32 @@ body.light-theme {
   background: #eff6ff;
   border-left: 3px solid var(--color-blue);
 }
+.history-item.reply {
+  background: var(--color-amber-bg);
+  border-left: 3px solid var(--color-amber);
+}
 .history-item.solution {
   background: #f0fdf4;
   border-left: 3px solid var(--color-green);
 }
+
+.btn-complete-sub {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  padding: 3px 8px;
+  font-size: 0.72rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+.btn-complete-sub:hover {
+  background: var(--color-green-bg);
+  border-color: var(--color-green);
+  color: var(--color-green);
+}
+
 
 .history-meta {
   display: flex;

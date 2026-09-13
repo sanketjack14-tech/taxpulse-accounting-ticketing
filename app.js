@@ -946,23 +946,65 @@ document.addEventListener('DOMContentLoaded', () => {
     
     document.getElementById('modal-client').textContent = ticket.clientName;
     document.getElementById('modal-intent').textContent = ticket.category;
-    document.getElementById('modal-assigned').textContent = ticket.isMultiIntent ? 'Multiple Departments' : `${staff.name} (${staff.dept})`;
+    document.getElementById('modal-assigned').textContent = ticket.isMultiIntent ? `${staff.name} (${staff.dept})` : `${staff.name} (${staff.dept})`;
     document.getElementById('modal-sla').textContent = sla.text;
 
     // Render Sub-Tickets if Multi-Intent
     if (ticket.isMultiIntent && ticket.subTickets && ticket.subTickets.length > 0) {
       subTicketsSection.classList.remove('hidden');
-      subTicketsList.innerHTML = ticket.subTickets.map(st => `
-        <div class="sub-ticket-item">
-          <div class="sub-ticket-info">
-            <span class="sub-title">${st.category}</span>
-            <span class="sub-meta">Dept: <strong>${st.dept}</strong> | Assignee: <strong>${st.assignedStaffName}</strong> | TAT: ${st.tatHours}h</span>
+      subTicketsList.innerHTML = ticket.subTickets.map(st => {
+        const isCompleted = st.status === 'COMPLETED' || st.status === 'RESOLVED';
+        return `
+          <div class="sub-ticket-item">
+            <div class="sub-ticket-info">
+              <span class="sub-title">${st.category}</span>
+              <span class="sub-meta">Dept: <strong>${st.dept}</strong> | Assignee: <strong>${st.assignedStaffName}</strong> | Max TAT: ${st.tatHours}h</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="badge ${isCompleted ? 'badge-green' : 'badge-amber'}">${st.status === 'COMPLETED' ? 'COMPLETED & HANDED OFF' : st.status}</span>
+              ${!isCompleted ? `
+                <button class="btn-complete-sub" data-sub-id="${st.subId}">
+                  <i data-lucide="check" style="width: 10px; height: 10px;"></i> Complete & Hand off
+                </button>
+              ` : ''}
+            </div>
           </div>
-          <div>
-            <span class="badge ${st.status === 'RESOLVED' ? 'badge-green' : 'badge-amber'}">${st.status}</span>
-          </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
+
+      // Bind Hand-off button clicks
+      subTicketsList.querySelectorAll('.btn-complete-sub').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const subId = btn.getAttribute('data-sub-id');
+          const subTicket = ticket.subTickets.find(st => st.subId === subId);
+          if (subTicket) {
+            subTicket.status = 'COMPLETED';
+
+            const nextPending = ticket.subTickets.find(st => st.status === 'PENDING');
+            let handoffText = '';
+            if (nextPending) {
+              ticket.assignedStaffId = nextPending.assignedStaffId;
+              handoffText = `handed off parent ticket to ${nextPending.assignedStaffName} (${nextPending.dept}) for final response.`;
+            } else {
+              handoffText = `all sub-tickets completed. Ready for final response & ticket closure.`;
+            }
+
+            const currentTime = formatTime(new Date());
+            ticket.historyLogs.push({
+              type: 'reassign',
+              sender: 'Multi-Dept Sequential Workflow',
+              timestamp: currentTime,
+              content: `${subTicket.assignedStaffName} (${subTicket.dept}) COMPLETED Sub-Ticket (${subTicket.category}) and ${handoffText}`
+            });
+
+            openTicketModal(ticket.id);
+            updateMetrics();
+            renderTickets();
+            renderStaffWorkload();
+          }
+        });
+      });
     } else {
       subTicketsSection.classList.add('hidden');
     }
@@ -981,6 +1023,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (log.type === 'reassign') {
           icon = 'arrow-right-left';
           senderColor = 'var(--color-blue)';
+        } else if (log.type === 'reply') {
+          icon = 'message-square';
+          senderColor = 'var(--color-amber)';
         } else if (log.type === 'solution') {
           icon = 'check-circle-2';
           senderColor = 'var(--color-green)';
@@ -1019,6 +1064,42 @@ document.addEventListener('DOMContentLoaded', () => {
     modalReplyText.value = document.getElementById('modal-ai-suggestion').textContent;
   });
 
+  // Intermediate Reply (Keep Open) Button Handler
+  if (btnReplyTicket) {
+    btnReplyTicket.addEventListener('click', () => {
+      if (!selectedTicketId) return;
+
+      const replyText = modalReplyText.value.trim();
+      if (!replyText) {
+        alert("Please draft an intermediate response or request clarification before sending.");
+        return;
+      }
+
+      const ticket = tickets.find(t => t.id === selectedTicketId);
+      if (!ticket) return;
+
+      const currentStaff = STAFF_MEMBERS.find(s => s.id === ticket.assignedStaffId);
+      const staffName = currentStaff ? `${currentStaff.name} (${currentStaff.dept})` : 'Accountant';
+      const currentTime = formatTime(new Date());
+
+      if (!ticket.historyLogs) ticket.historyLogs = [];
+      ticket.historyLogs.push({
+        type: 'reply',
+        sender: `${staffName} (Intermediate Reply)`,
+        timestamp: currentTime,
+        content: replyText
+      });
+
+      modalReplyText.value = '';
+      openTicketModal(ticket.id);
+      updateMetrics();
+      renderTickets();
+
+      alert(`💬 Intermediate reply sent to ${ticket.clientName} via ${ticket.channel} API! Ticket #${ticket.id} remains OPEN (TAT clock running).`);
+    });
+  }
+
+  // Reply & Close (Mark RESOLVED) Button Handler
   btnResolveTicket.addEventListener('click', () => {
     if (!selectedTicketId) return;
 
@@ -1042,7 +1123,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!ticket.historyLogs) ticket.historyLogs = [];
       ticket.historyLogs.push({
         type: 'solution',
-        sender: staffName,
+        sender: `${staffName} (Final Solution & Resolution)`,
         timestamp: formatTime(new Date()),
         content: reply
       });
