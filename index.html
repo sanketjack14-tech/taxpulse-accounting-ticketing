@@ -69,32 +69,8 @@
   <!-- Main Container -->
   <main class="app-container">
 
-    <!-- Guided Demonstration Banner for Nested Queries -->
-    <div class="nested-demo-card">
-      <div class="demo-card-header">
-        <div class="demo-title">
-          <i data-lucide="git-merge" style="color: #2563eb;"></i>
-          <strong>Interactive Demonstration: Nested Multi-Department Query Workflow</strong>
-        </div>
-      </div>
-      <p class="demo-subtext">Click any persona below to instantly switch login access and demonstrate nested ticket hand-offs:</p>
-
-      <div class="demo-steps">
-        <button class="step-chip" id="demo-step-1" data-login-role="STAFF_RAHUL">
-          1️⃣ Login as <strong>Rahul Sharma (Direct Tax)</strong> → Process TDS Sub-Ticket A & Hand off
-        </button>
-        <button class="step-chip" id="demo-step-2" data-login-role="STAFF_PRIYA">
-          2️⃣ Login as <strong>Priya Sundaram (GST Lead)</strong> → Process GST Sub-Ticket B & Close Query
-        </button>
-        <button class="step-chip active" id="demo-step-3" data-login-role="TEAM_LEADER">
-          3️⃣ Login as <strong>Team Leader (Rajesh Khanna)</strong> → Full Audit History & 25-Staff View
-        </button>
-      </div>
-    </div>
-    
     <!-- Top Metrics Row (Clickable to Filter Queue) -->
     <section class="metrics-grid">
-
       <div class="metric-card active" data-filter-status="ALL" id="card-total" title="Click to view all queries">
         <div class="metric-header">
           <span class="metric-label" id="lbl-total-metric">Total (Selected Date)</span>
@@ -131,6 +107,7 @@
         <div class="metric-subtext">Avg TAT: <strong>1h 22m</strong></div>
       </div>
     </section>
+
 
     <!-- Workspace Main Section -->
     <div class="workspace-layout">

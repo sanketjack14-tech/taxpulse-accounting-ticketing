@@ -298,6 +298,26 @@ document.addEventListener('DOMContentLoaded', () => {
       bgClass: 'bg-amber',
       email: 'priya.sundaram@taxpulse.in'
     },
+    STAFF_VIKRAM: {
+      id: 'STAFF_VIKRAM',
+      name: 'Vikram Mehta',
+      role: 'Bookkeeping Head (Accounts)',
+      dept: 'Accounts & Bookkeeping',
+      staffId: 'S3',
+      avatar: 'VM',
+      bgClass: 'bg-purple',
+      email: 'vikram.mehta@taxpulse.in'
+    },
+    STAFF_ANITA: {
+      id: 'STAFF_ANITA',
+      name: 'Anita Rao',
+      role: 'Audit Manager (Compliance)',
+      dept: 'Audit & Compliance',
+      staffId: 'S4',
+      avatar: 'AR',
+      bgClass: 'bg-blue',
+      email: 'anita.rao@taxpulse.in'
+    },
     CLIENT_ALOK: {
       id: 'CLIENT_ALOK',
       name: 'Mr. Alok Nath',
@@ -402,13 +422,6 @@ document.addEventListener('DOMContentLoaded', () => {
     activeUserName.textContent = roleObj.name;
     activeUserRole.textContent = roleObj.role;
 
-    // Update Guided Step Chips in Banner
-    document.querySelectorAll('.step-chip').forEach(chip => {
-      const chipRole = chip.getAttribute('data-login-role');
-      if (chipRole === roleId) chip.classList.add('active');
-      else chip.classList.remove('active');
-    });
-
     // Adjust Dashboard Filters according to Persona Access
     if (roleObj.id === 'TEAM_LEADER') {
       activeFilters.staffId = null;
@@ -422,6 +435,14 @@ document.addEventListener('DOMContentLoaded', () => {
       activeFilters.staffId = 'S2';
       activeFilters.dept = 'GST & Indirect Tax';
       selectDept.value = 'GST & Indirect Tax';
+    } else if (roleObj.id === 'STAFF_VIKRAM') {
+      activeFilters.staffId = 'S3';
+      activeFilters.dept = 'Accounts & Bookkeeping';
+      selectDept.value = 'Accounts & Bookkeeping';
+    } else if (roleObj.id === 'STAFF_ANITA') {
+      activeFilters.staffId = 'S4';
+      activeFilters.dept = 'Audit & Compliance';
+      selectDept.value = 'Audit & Compliance';
     } else if (roleObj.id === 'CLIENT_ALOK') {
       activeFilters.staffId = null;
       activeFilters.search = 'xyz logistics';
@@ -436,6 +457,7 @@ document.addEventListener('DOMContentLoaded', () => {
       alert(`🔑 Logged in as ${roleObj.name} (${roleObj.role})!\nDashboard view updated to match access permissions.`);
     }
   }
+
 
   // Guided Step Banner Listeners
   document.querySelectorAll('.step-chip').forEach(chip => {
