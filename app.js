@@ -49,6 +49,45 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let tickets = [
     {
+      id: 'TICK-1080',
+      channel: 'WHATSAPP',
+      clientName: 'XYZ Logistics Pvt Ltd',
+      senderRep: 'Mr. Alok Nath',
+      messageText: 'Hi Rahul, please send our Q3 TDS computation statement AND also check why our August GSTR-3B ITC reconciliation has a mismatch.',
+      category: 'Multi-Dept (TDS + GST Split)',
+      complexity: 'Medium',
+      tatHours: 8,
+      createdAt: new Date(now.getTime() - 45 * 60 * 1000),
+      status: 'PENDING',
+      assignedStaffId: 'S1',
+      dept: 'Multi-Department',
+      isMultiIntent: true,
+      subTickets: [
+        {
+          subId: 'TICK-1080-A',
+          category: 'TDS Statement Request',
+          dept: 'Direct Tax',
+          complexity: 'Low',
+          tatHours: 4,
+          assignedStaffId: 'S1',
+          assignedStaffName: 'Rahul Sharma',
+          status: 'PENDING',
+          itemsRequested: ['Q3 TDS Statement']
+        },
+        {
+          subId: 'TICK-1080-B',
+          category: 'GST 3B Recon Issue',
+          dept: 'GST & Indirect Tax',
+          complexity: 'Medium',
+          tatHours: 8,
+          assignedStaffId: 'S2',
+          assignedStaffName: 'Priya Sundaram',
+          status: 'PENDING',
+          itemsRequested: ['GSTR-3B ITC Recon Table']
+        }
+      ]
+    },
+    {
       id: 'TICK-1081',
       channel: 'WHATSAPP',
       clientName: 'XYZ Logistics Pvt Ltd',
@@ -57,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
       category: 'TDS Statement Request',
       complexity: 'Low',
       tatHours: 4,
-      createdAt: new Date(now.getTime() - 35 * 60 * 1000), // Today
+      createdAt: new Date(now.getTime() - 35 * 60 * 1000),
       status: 'PENDING',
       assignedStaffId: 'S1',
       dept: 'Direct Tax',
@@ -72,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
       category: 'GST 3B Recon Issue',
       complexity: 'Medium',
       tatHours: 8,
-      createdAt: new Date(now.getTime() - 6 * 60 * 60 * 1000 - 45 * 60 * 1000), // Today
+      createdAt: new Date(now.getTime() - 6 * 60 * 60 * 1000 - 45 * 60 * 1000),
       status: 'PENDING',
       assignedStaffId: 'S2',
       dept: 'GST & Indirect Tax',
@@ -87,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
       category: 'IT Notice Response',
       complexity: 'High',
       tatHours: 24,
-      createdAt: new Date(now.getTime() - 26 * 60 * 60 * 1000), // Yesterday
+      createdAt: new Date(now.getTime() - 26 * 60 * 60 * 1000), // OVERDUE
       status: 'PENDING',
       assignedStaffId: 'S4',
       dept: 'Audit & Compliance',
@@ -102,7 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
       category: 'Bank Statement Request',
       complexity: 'Low',
       tatHours: 4,
-      createdAt: new Date(now.getTime() - 2 * 60 * 60 * 1000), // Today
+      createdAt: new Date(now.getTime() - 2 * 60 * 60 * 1000),
       status: 'RESOLVED',
       resolvedAt: new Date(now.getTime() - 30 * 60 * 1000),
       assignedStaffId: 'S3',
@@ -118,7 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
       category: 'Advance Tax Computation',
       complexity: 'Medium',
       tatHours: 8,
-      createdAt: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000), // 3 days ago (Last 7 Days)
+      createdAt: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
       status: 'PENDING',
       assignedStaffId: 'S5',
       dept: 'Direct Tax',
@@ -172,6 +211,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnUseAiSuggestion = document.getElementById('btn-use-ai-suggestion');
   const modalReplyText = document.getElementById('modal-reply-text');
 
+  const subTicketsSection = document.getElementById('sub-tickets-section');
+  const subTicketsList = document.getElementById('sub-tickets-list');
+
   const metricCards = document.querySelectorAll('.metric-card[data-filter-status]');
   const staffFilterTag = document.getElementById('staff-filter-tag');
   const staffFilterName = document.getElementById('staff-filter-name');
@@ -202,6 +244,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Preset Handlers
   const PRESETS = {
+    multi: "Hi Rahul, please send our Q3 TDS computation statement AND also check why our August GSTR-3B ITC reconciliation has a mismatch.",
     tds: "Hi Rahul, please send last year Q3 TDS computation statement and payment challans urgently for filing quarterly returns.",
     bank: "Please provide the audited bank statement of SBI account for FY 2024-25 for our bank audit.",
     gst: "Hi Priya, we noticed a mismatch between our purchase register and GSTR-2B for August 2026. Can you verify ITC eligibility?",
@@ -218,42 +261,80 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // --- 4. GEMINI AI PARSER SIMULATION ---
+  // --- 4. GEMINI AI MULTI-INTENT PARSER SIMULATION ---
   function runGeminiAiParser(messageText, clientName) {
     const textLower = messageText.toLowerCase();
     
+    let isMultiIntent = false;
     let category = 'General Accounting Query';
     let complexity = 'Low';
     let tatHours = 4;
     let itemsRequested = ['General Clarification'];
     let isCasualPersonal = false;
+    let subTickets = [];
 
-    if (textLower.includes('tds') || textLower.includes('26as') || textLower.includes('challan')) {
+    const hasTds = textLower.includes('tds') || textLower.includes('26as') || textLower.includes('challan');
+    const hasGst = textLower.includes('gst') || textLower.includes('3b') || textLower.includes('recon') || textLower.includes('itc');
+    const hasBank = textLower.includes('bank') || textLower.includes('statement') || textLower.includes('passbook');
+    const hasNotice = textLower.includes('notice') || textLower.includes('sec 143') || textLower.includes('audit');
+
+    // Multi-Intent Detection
+    if ((hasTds && hasGst) || (hasTds && hasNotice) || (hasGst && hasBank)) {
+      isMultiIntent = true;
+      category = 'Multi-Dept (TDS + GST Split)';
+      complexity = 'Medium';
+      tatHours = 8;
+
+      subTickets = [
+        {
+          subId: 'SUB-A',
+          category: 'TDS Statement Request',
+          dept: 'Direct Tax',
+          complexity: 'Low',
+          tatHours: 4,
+          assignedStaffId: 'S1',
+          assignedStaffName: 'Rahul Sharma',
+          status: 'PENDING',
+          itemsRequested: ['Q3 TDS Statement']
+        },
+        {
+          subId: 'SUB-B',
+          category: 'GST 3B Recon Issue',
+          dept: 'GST & Indirect Tax',
+          complexity: 'Medium',
+          tatHours: 8,
+          assignedStaffId: 'S2',
+          assignedStaffName: 'Priya Sundaram',
+          status: 'PENDING',
+          itemsRequested: ['GSTR-3B Recon Table']
+        }
+      ];
+    } else if (hasTds) {
       category = 'TDS / 26AS Statement';
       complexity = 'Low';
       tatHours = 4;
       itemsRequested = ['TDS Statement', 'Challan Copy'];
-    } else if (textLower.includes('bank') || textLower.includes('statement') || textLower.includes('passbook')) {
+    } else if (hasBank) {
       category = 'Bank Statement Request';
       complexity = 'Low';
       tatHours = 4;
       itemsRequested = ['Audited Bank Statement'];
-    } else if (textLower.includes('gst') || textLower.includes('3b') || textLower.includes('recon') || textLower.includes('itc')) {
+    } else if (hasGst) {
       category = 'GST 3B / ITC Recon';
       complexity = 'Medium';
       tatHours = 8;
       itemsRequested = ['GSTR-2B Recon', 'ITC Computation'];
-    } else if (textLower.includes('notice') || textLower.includes('sec 143') || textLower.includes('audit') || textLower.includes('assessment')) {
+    } else if (hasNotice) {
       category = 'IT Notice / Audit Reply';
       complexity = 'High';
       tatHours = 24;
       itemsRequested = ['Notice Analysis', 'Reply Draft'];
-    } else if (textLower.includes('advance tax') || textLower.includes('tax calculation')) {
+    } else if (textLower.includes('advance tax')) {
       category = 'Advance Tax Computation';
       complexity = 'Medium';
       tatHours = 8;
       itemsRequested = ['Advance Tax Calculation Sheet'];
-    } else if (textLower.includes('birthday') || textLower.includes('coffee') || textLower.includes('dinner') || textLower.includes('bro')) {
+    } else if (textLower.includes('birthday') || textLower.includes('coffee') || textLower.includes('bro')) {
       category = 'Personal / Casual Message';
       complexity = 'N/A';
       tatHours = 0;
@@ -265,13 +346,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const assignedStaff = STAFF_MEMBERS.find(s => s.id === clientInfo.assignedStaffId) || STAFF_MEMBERS[0];
 
     return {
+      isMultiIntent,
       category,
       complexity,
       tatHours,
       itemsRequested,
       assignedStaff,
       clientInfo,
-      isCasualPersonal
+      isCasualPersonal,
+      subTickets
     };
   }
 
@@ -393,8 +476,8 @@ document.addEventListener('DOMContentLoaded', () => {
         t.id.toLowerCase().includes(activeFilters.search);
 
       const channelMatch = activeFilters.channel === 'ALL' || t.channel === activeFilters.channel;
-      const deptMatch = activeFilters.dept === 'ALL' || t.dept === activeFilters.dept;
-      const staffMatch = !activeFilters.staffId || t.assignedStaffId === activeFilters.staffId;
+      const deptMatch = activeFilters.dept === 'ALL' || t.dept === activeFilters.dept || (t.isMultiIntent && t.subTickets.some(st => st.dept === activeFilters.dept));
+      const staffMatch = !activeFilters.staffId || t.assignedStaffId === activeFilters.staffId || (t.isMultiIntent && t.subTickets.some(st => st.assignedStaffId === activeFilters.staffId));
 
       let statusMatch = true;
       if (activeFilters.status === 'PENDING') statusMatch = t.status === 'PENDING' && !isTicketOverdue(t);
@@ -422,6 +505,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const assignedStaff = STAFF_MEMBERS.find(s => s.id === t.assignedStaffId) || { name: 'Unassigned' };
       const isOverdue = isTicketOverdue(t);
 
+      let staffDisplay = assignedStaff.name;
+      if (t.isMultiIntent && t.subTickets) {
+        staffDisplay = t.subTickets.map(st => st.assignedStaffName).join(' & ');
+      }
+
       return `
         <div class="ticket-card ${isOverdue ? 'status-overdue' : ''}" data-id="${t.id}">
           <div class="ticket-channel-info">
@@ -436,17 +524,17 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="client-name">${t.clientName}</div>
             <div class="query-snippet">"${t.messageText}"</div>
             <div class="query-tags">
-              <span class="badge badge-purple">${t.category}</span>
+              <span class="badge ${t.isMultiIntent ? 'badge-multi' : 'badge-purple'}">${t.category}</span>
               <span class="badge ${t.complexity === 'High' ? 'badge-red' : t.complexity === 'Medium' ? 'badge-amber' : 'badge-green'}">
                 Complexity: ${t.complexity}
               </span>
-              <span class="badge">TAT: ${t.tatHours}h</span>
+              <span class="badge">Max TAT: ${t.tatHours}h</span>
             </div>
           </div>
 
           <div class="ticket-sla-info">
             <span class="sla-timer ${sla.class}">${sla.text}</span>
-            <span class="staff-assigned"><i data-lucide="user" style="width: 10px;"></i> ${assignedStaff.name}</span>
+            <span class="staff-assigned"><i data-lucide="users" style="width: 10px;"></i> ${staffDisplay}</span>
           </div>
 
           <div class="ticket-actions">
@@ -471,8 +559,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderStaffWorkload() {
     const staffWorkload = STAFF_MEMBERS.map(staff => {
-      const pendingCount = tickets.filter(t => t.assignedStaffId === staff.id && t.status === 'PENDING').length;
-      const overdueCount = tickets.filter(t => t.assignedStaffId === staff.id && t.status === 'PENDING' && isTicketOverdue(t)).length;
+      const pendingCount = tickets.filter(t => (t.assignedStaffId === staff.id || (t.isMultiIntent && t.subTickets.some(st => st.assignedStaffId === staff.id))) && t.status === 'PENDING').length;
+      const overdueCount = tickets.filter(t => (t.assignedStaffId === staff.id || (t.isMultiIntent && t.subTickets.some(st => st.assignedStaffId === staff.id))) && t.status === 'PENDING' && isTicketOverdue(t)).length;
       return { ...staff, pendingCount, overdueCount };
     }).sort((a, b) => b.pendingCount - a.pendingCount);
 
@@ -505,8 +593,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderStaffDirectoryModal() {
     const staffWorkload = STAFF_MEMBERS.map(staff => {
-      const pendingCount = tickets.filter(t => t.assignedStaffId === staff.id && t.status === 'PENDING').length;
-      const overdueCount = tickets.filter(t => t.assignedStaffId === staff.id && t.status === 'PENDING' && isTicketOverdue(t)).length;
+      const pendingCount = tickets.filter(t => (t.assignedStaffId === staff.id || (t.isMultiIntent && t.subTickets.some(st => st.assignedStaffId === staff.id))) && t.status === 'PENDING').length;
+      const overdueCount = tickets.filter(t => (t.assignedStaffId === staff.id || (t.isMultiIntent && t.subTickets.some(st => st.assignedStaffId === staff.id))) && t.status === 'PENDING' && isTicketOverdue(t)).length;
       return { ...staff, pendingCount, overdueCount };
     });
 
@@ -540,7 +628,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- 7. EVENT HANDLERS ---
 
-  // Date Preset Selector
   selectDatePreset.addEventListener('change', (e) => {
     activeFilters.datePreset = e.target.value;
     if (e.target.value === 'CUSTOM') {
@@ -558,7 +645,6 @@ document.addEventListener('DOMContentLoaded', () => {
     renderTickets();
   });
 
-  // Metric Box Clicks
   metricCards.forEach(card => {
     card.addEventListener('click', () => {
       const statusFilter = card.getAttribute('data-filter-status');
@@ -634,7 +720,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('ai-complexity').textContent = aiResult.complexity;
     document.getElementById('ai-complexity').className = `badge ${aiResult.complexity === 'High' ? 'badge-red' : aiResult.complexity === 'Medium' ? 'badge-amber' : 'badge-green'}`;
     document.getElementById('ai-tat').textContent = `${aiResult.tatHours} Hours`;
-    document.getElementById('ai-assigned').textContent = `${aiResult.assignedStaff.name} (${aiResult.assignedStaff.dept})`;
+    document.getElementById('ai-assigned').textContent = aiResult.isMultiIntent ? 'Multiple (Split Sub-Tickets)' : `${aiResult.assignedStaff.name} (${aiResult.assignedStaff.dept})`;
 
     if (aiResult.isCasualPersonal) {
       alert("ℹ️ Gemini AI detected this as a Personal Chat. Filtered into private staff sandbox & excluded from SLA metrics.");
@@ -652,8 +738,10 @@ document.addEventListener('DOMContentLoaded', () => {
       createdAt: new Date(),
       status: 'PENDING',
       assignedStaffId: aiResult.assignedStaff.id,
-      dept: aiResult.assignedStaff.dept,
-      itemsRequested: aiResult.itemsRequested
+      dept: aiResult.isMultiIntent ? 'Multi-Department' : aiResult.assignedStaff.dept,
+      itemsRequested: aiResult.itemsRequested,
+      isMultiIntent: aiResult.isMultiIntent,
+      subTickets: aiResult.subTickets
     };
 
     tickets.unshift(newTicket);
@@ -677,14 +765,32 @@ document.addEventListener('DOMContentLoaded', () => {
     
     document.getElementById('modal-client').textContent = ticket.clientName;
     document.getElementById('modal-intent').textContent = ticket.category;
-    document.getElementById('modal-assigned').textContent = `${staff.name} (${staff.dept})`;
+    document.getElementById('modal-assigned').textContent = ticket.isMultiIntent ? 'Multiple Departments' : `${staff.name} (${staff.dept})`;
     document.getElementById('modal-sla').textContent = sla.text;
+
+    // Render Sub-Tickets if Multi-Intent
+    if (ticket.isMultiIntent && ticket.subTickets && ticket.subTickets.length > 0) {
+      subTicketsSection.classList.remove('hidden');
+      subTicketsList.innerHTML = ticket.subTickets.map(st => `
+        <div class="sub-ticket-item">
+          <div class="sub-ticket-info">
+            <span class="sub-title">${st.category}</span>
+            <span class="sub-meta">Dept: <strong>${st.dept}</strong> | Assignee: <strong>${st.assignedStaffName}</strong> | TAT: ${st.tatHours}h</span>
+          </div>
+          <div>
+            <span class="badge ${st.status === 'RESOLVED' ? 'badge-green' : 'badge-amber'}">${st.status}</span>
+          </div>
+        </div>
+      `).join('');
+    } else {
+      subTicketsSection.classList.add('hidden');
+    }
 
     document.getElementById('modal-sender').textContent = ticket.senderRep;
     document.getElementById('modal-timestamp').textContent = new Date(ticket.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     document.getElementById('modal-content').textContent = ticket.messageText;
 
-    document.getElementById('modal-ai-suggestion').textContent = `Dear ${ticket.senderRep}, We have received your query regarding ${ticket.category}. Our team is processing this and will send the details within our assigned TAT window.`;
+    document.getElementById('modal-ai-suggestion').textContent = `Dear ${ticket.senderRep}, We have received your query regarding ${ticket.category}. Our respective department teams have been assigned and will provide responses within their specific TAT windows.`;
 
     modalReplyText.value = '';
     ticketModal.classList.remove('hidden');
@@ -711,6 +817,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (ticket) {
       ticket.status = 'RESOLVED';
       ticket.resolvedAt = new Date();
+      if (ticket.isMultiIntent && ticket.subTickets) {
+        ticket.subTickets.forEach(st => st.status = 'RESOLVED');
+      }
     }
 
     ticketModal.classList.add('hidden');

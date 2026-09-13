@@ -37,7 +37,7 @@
       </div>
       <div class="status-indicator">
         <span class="pulse-dot purple"></span>
-        <span class="status-text">Gemini NLP Engine</span>
+        <span class="status-text">Gemini Multi-Intent AI</span>
       </div>
     </div>
 
@@ -229,6 +229,7 @@
             <div class="form-group">
               <label>Quick Presets (Click to test):</label>
               <div class="preset-chips">
+                <button class="chip" data-preset="multi">🔀 Multi-Dept Query (TDS + GST Split)</button>
                 <button class="chip" data-preset="tds">TDS Statement Request</button>
                 <button class="chip" data-preset="bank">Bank Statement Last Year</button>
                 <button class="chip" data-preset="gst">GST 3B Recon Issue</button>
@@ -312,6 +313,16 @@
           <div>
             <span class="meta-label">SLA Status</span>
             <div class="meta-val" id="modal-sla">3h 42m remaining</div>
+          </div>
+        </div>
+
+        <!-- Sub-Tickets Section for Multi-Department Requests -->
+        <div id="sub-tickets-section" class="sub-tickets-container hidden">
+          <div class="sub-tickets-header">
+            <i data-lucide="git-merge"></i> <strong>Multi-Department Sub-Tickets Breakdown</strong>
+          </div>
+          <div id="sub-tickets-list" class="sub-tickets-list">
+            <!-- Dynamic sub-tickets list -->
           </div>
         </div>
 
