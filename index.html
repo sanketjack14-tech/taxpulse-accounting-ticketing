@@ -139,9 +139,15 @@
           </div>
         </div>
 
-        <!-- Ticket Queue Header -->
+        <!-- Ticket Queue Header with Active Staff Filter Tag -->
         <div class="queue-header">
-          <h2>Active Queries (<span id="ticket-count">7</span>)</h2>
+          <div class="queue-title-group">
+            <h2>Active Queries (<span id="ticket-count">7</span>)</h2>
+            <div id="staff-filter-tag" class="staff-filter-badge hidden">
+              <span>Filtered by: <strong id="staff-filter-name">Rahul Sharma</strong></span>
+              <button id="btn-clear-staff-filter" class="btn-icon-clear" title="Clear Staff Filter"><i data-lucide="x"></i></button>
+            </div>
+          </div>
           <span class="click-hint"><i data-lucide="mouse-pointer-click"></i> Click any ticket to view details & respond</span>
         </div>
 
@@ -151,13 +157,14 @@
         </div>
       </section>
 
-      <!-- Right Column: Staff Workload Overview -->
+      <!-- Right Column: Staff Workload Overview (Clickable Members) -->
       <aside class="side-panel">
         <div class="card workload-card">
           <div class="card-header">
-            <h3><i data-lucide="users"></i> Staff Workload (25 Members)</h3>
-            <span class="sub-badge">Live Status</span>
+            <h3><i data-lucide="users"></i> Staff Workload</h3>
+            <span class="sub-link" id="btn-view-all-staff" title="Click to view all 25 team members">View All 25</span>
           </div>
+          <p class="workload-hint">Click any staff member to filter their assigned tickets</p>
           <div class="workload-list" id="workload-container">
             <!-- Injected dynamically -->
           </div>
@@ -244,6 +251,25 @@
     </section>
 
   </main>
+
+  <!-- Staff Directory Modal (View All 25 Members) -->
+  <div class="modal-overlay hidden" id="staff-directory-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <h2>Staff Directory (25 Team Members)</h2>
+        </div>
+        <button class="modal-close" id="btn-close-staff-modal"><i data-lucide="x"></i></button>
+      </div>
+
+      <div class="modal-body">
+        <p class="sim-desc">Select any team member to view their workload and filter their active tickets:</p>
+        <div class="staff-grid-modal" id="all-staff-container">
+          <!-- All 25 staff items injected here -->
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Ticket Reply Modal Drawer -->
   <div class="modal-overlay hidden" id="ticket-modal">

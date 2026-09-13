@@ -17,7 +17,22 @@ document.addEventListener('DOMContentLoaded', () => {
     { id: 'S7', name: 'Siddharth Gupta', dept: 'GST & Indirect Tax', role: 'GST Specialist', workload: 1 },
     { id: 'S8', name: 'Meenakshi Iyer', dept: 'Audit & Compliance', role: 'Senior Auditor', workload: 0 },
     { id: 'S9', name: 'Amitabh Joshi', dept: 'Direct Tax', role: 'Tax Analyst', workload: 1 },
-    { id: 'S10', name: 'Ritu Kapoor', dept: 'Accounts & Bookkeeping', role: 'Accountant', workload: 2 }
+    { id: 'S10', name: 'Ritu Kapoor', dept: 'Accounts & Bookkeeping', role: 'Accountant', workload: 2 },
+    { id: 'S11', name: 'Suresh Kumar', dept: 'GST & Indirect Tax', role: 'Associate', workload: 0 },
+    { id: 'S12', name: 'Deepika Nair', dept: 'Audit & Compliance', role: 'Audit Staff', workload: 1 },
+    { id: 'S13', name: 'Rohan Deshmukh', dept: 'Direct Tax', role: 'Associate', workload: 0 },
+    { id: 'S14', name: 'Pooja Agarwal', dept: 'Accounts & Bookkeeping', role: 'Accountant', workload: 1 },
+    { id: 'S15', name: 'Manish Singh', dept: 'GST & Indirect Tax', role: 'Associate', workload: 0 },
+    { id: 'S16', name: 'Kavita Menon', dept: 'Audit & Compliance', role: 'Senior Auditor', workload: 0 },
+    { id: 'S17', name: 'Tarun Bansal', dept: 'Direct Tax', role: 'Tax Consultant', workload: 0 },
+    { id: 'S18', name: 'Swati Reddy', dept: 'Accounts & Bookkeeping', role: 'Junior Accountant', workload: 1 },
+    { id: 'S19', name: 'Gaurav Bhatia', dept: 'GST & Indirect Tax', role: 'Associate', workload: 0 },
+    { id: 'S20', name: 'Sneha Kulkarni', dept: 'Audit & Compliance', role: 'Audit Associate', workload: 0 },
+    { id: 'S21', name: 'Varun Saxena', dept: 'Direct Tax', role: 'Associate', workload: 0 },
+    { id: 'S22', name: 'Divya Pillai', dept: 'Accounts & Bookkeeping', role: 'Accountant', workload: 0 },
+    { id: 'S23', name: 'Nikhil Roy', dept: 'GST & Indirect Tax', role: 'Associate', workload: 0 },
+    { id: 'S24', name: 'Ananya Roy', dept: 'Audit & Compliance', role: 'Associate', workload: 0 },
+    { id: 'S25', name: 'Rajesh Khanna', dept: 'Direct Tax', role: 'Partner / Lead', workload: 0 }
   ];
 
   const CLIENTS = {
@@ -113,7 +128,8 @@ document.addEventListener('DOMContentLoaded', () => {
     search: '',
     channel: 'ALL',
     status: 'ALL',
-    dept: 'ALL'
+    dept: 'ALL',
+    staffId: null // Added staffId filter
   };
 
   let selectedTicketId = null;
@@ -150,8 +166,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnUseAiSuggestion = document.getElementById('btn-use-ai-suggestion');
   const modalReplyText = document.getElementById('modal-reply-text');
 
-  // Metric Cards
   const metricCards = document.querySelectorAll('.metric-card[data-filter-status]');
+  const staffFilterTag = document.getElementById('staff-filter-tag');
+  const staffFilterName = document.getElementById('staff-filter-name');
+  const btnClearStaffFilter = document.getElementById('btn-clear-staff-filter');
+
+  const btnViewAllStaff = document.getElementById('btn-view-all-staff');
+  const staffDirectoryModal = document.getElementById('staff-directory-modal');
+  const btnCloseStaffModal = document.getElementById('btn-close-staff-modal');
+  const allStaffContainer = document.getElementById('all-staff-container');
 
   // --- 3. ACCORDION CONTROLS ---
   function toggleAccordion(open = null) {
@@ -307,6 +330,17 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderTickets() {
     updateMetricCardActiveState();
 
+    // Staff filter badge handling
+    if (activeFilters.staffId) {
+      const staffObj = STAFF_MEMBERS.find(s => s.id === activeFilters.staffId);
+      if (staffObj) {
+        staffFilterName.textContent = staffObj.name;
+        staffFilterTag.classList.remove('hidden');
+      }
+    } else {
+      staffFilterTag.classList.add('hidden');
+    }
+
     const filtered = tickets.filter(t => {
       const searchMatch = !activeFilters.search || 
         t.clientName.toLowerCase().includes(activeFilters.search) ||
@@ -315,22 +349,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const channelMatch = activeFilters.channel === 'ALL' || t.channel === activeFilters.channel;
       const deptMatch = activeFilters.dept === 'ALL' || t.dept === activeFilters.dept;
+      const staffMatch = !activeFilters.staffId || t.assignedStaffId === activeFilters.staffId;
 
       let statusMatch = true;
       if (activeFilters.status === 'PENDING') statusMatch = t.status === 'PENDING' && !isTicketOverdue(t);
       else if (activeFilters.status === 'OVERDUE') statusMatch = t.status === 'PENDING' && isTicketOverdue(t);
       else if (activeFilters.status === 'RESOLVED') statusMatch = t.status === 'RESOLVED';
 
-      return searchMatch && channelMatch && deptMatch && statusMatch;
+      return searchMatch && channelMatch && deptMatch && staffMatch && statusMatch;
     });
 
     ticketCount.textContent = filtered.length;
 
     if (filtered.length === 0) {
       ticketsContainer.innerHTML = `
-        <div style="text-align: center; padding: 40px; color: var(--text-muted); background: #fff; border-radius: 8px; border: 1px solid var(--border-color);">
-          <i data-lucide="inbox" style="width: 40px; height: 40px; opacity: 0.4;"></i>
-          <p style="margin-top: 8px; font-size: 0.9rem;">No matching tickets found for filter: <strong>${activeFilters.status}</strong></p>
+        <div style="text-align: center; padding: 40px; color: var(--text-muted); background: #fff; border-radius: 6px; border: 1px solid var(--border-color);">
+          <i data-lucide="inbox" style="width: 36px; height: 36px; opacity: 0.4;"></i>
+          <p style="margin-top: 8px; font-size: 0.85rem;">No matching tickets found for current filters.</p>
         </div>
       `;
       lucide.createIcons();
@@ -346,7 +381,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="ticket-card ${isOverdue ? 'status-overdue' : ''}" data-id="${t.id}">
           <div class="ticket-channel-info">
             <span class="channel-tag ${t.channel === 'WHATSAPP' ? 'wa' : 'email'}">
-              <i data-lucide="${t.channel === 'WHATSAPP' ? 'message-circle' : 'mail'}" style="width: 11px;"></i>
+              <i data-lucide="${t.channel === 'WHATSAPP' ? 'message-circle' : 'mail'}" style="width: 10px;"></i>
               ${t.channel}
             </span>
             <span class="ticket-id">${t.id}</span>
@@ -366,12 +401,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
           <div class="ticket-sla-info">
             <span class="sla-timer ${sla.class}">${sla.text}</span>
-            <span class="staff-assigned"><i data-lucide="user" style="width: 11px;"></i> ${assignedStaff.name}</span>
+            <span class="staff-assigned"><i data-lucide="user" style="width: 10px;"></i> ${assignedStaff.name}</span>
           </div>
 
           <div class="ticket-actions">
             <button class="btn btn-sm ${t.status === 'RESOLVED' ? 'btn-outline' : 'btn-primary'} btn-view-ticket" data-id="${t.id}">
-              <i data-lucide="${t.status === 'RESOLVED' ? 'check' : 'message-square'}" style="width: 12px;"></i>
+              <i data-lucide="${t.status === 'RESOLVED' ? 'check' : 'message-square'}" style="width: 11px;"></i>
               <span>${t.status === 'RESOLVED' ? 'View' : 'Respond'}</span>
             </button>
           </div>
@@ -383,7 +418,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Make ticket cards clickable
     document.querySelectorAll('.ticket-card').forEach(card => {
-      card.addEventListener('click', (e) => {
+      card.addEventListener('click', () => {
         const id = card.getAttribute('data-id');
         openTicketModal(id);
       });
@@ -398,7 +433,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }).sort((a, b) => b.pendingCount - a.pendingCount);
 
     workloadContainer.innerHTML = staffWorkload.slice(0, 8).map(s => `
-      <div class="workload-item">
+      <div class="workload-item ${activeFilters.staffId === s.id ? 'active' : ''}" data-staff-id="${s.id}" title="Click to filter tickets assigned to ${s.name}">
         <div class="staff-info">
           <div class="avatar">${s.name.split(' ').map(n=>n[0]).join('')}</div>
           <div>
@@ -413,11 +448,56 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       </div>
     `).join('');
+
+    // Attach click listeners to staff workload cards
+    workloadContainer.querySelectorAll('.workload-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const id = item.getAttribute('data-staff-id');
+        activeFilters.staffId = (activeFilters.staffId === id) ? null : id;
+        renderTickets();
+        renderStaffWorkload();
+      });
+    });
+  }
+
+  function renderStaffDirectoryModal() {
+    const staffWorkload = STAFF_MEMBERS.map(staff => {
+      const pendingCount = tickets.filter(t => t.assignedStaffId === staff.id && t.status === 'PENDING').length;
+      const overdueCount = tickets.filter(t => t.assignedStaffId === staff.id && t.status === 'PENDING' && isTicketOverdue(t)).length;
+      return { ...staff, pendingCount, overdueCount };
+    });
+
+    allStaffContainer.innerHTML = staffWorkload.map(s => `
+      <div class="workload-item ${activeFilters.staffId === s.id ? 'active' : ''}" data-staff-id="${s.id}" style="padding: 10px;">
+        <div class="staff-info">
+          <div class="avatar">${s.name.split(' ').map(n=>n[0]).join('')}</div>
+          <div>
+            <div class="staff-name">${s.name}</div>
+            <div class="staff-dept">${s.dept} • ${s.role}</div>
+          </div>
+        </div>
+        <div>
+          <span class="badge ${s.overdueCount > 0 ? 'badge-red' : s.pendingCount > 0 ? 'badge-amber' : 'badge-green'}">
+            ${s.pendingCount} Pending
+          </span>
+        </div>
+      </div>
+    `).join('');
+
+    allStaffContainer.querySelectorAll('.workload-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const id = item.getAttribute('data-staff-id');
+        activeFilters.staffId = (activeFilters.staffId === id) ? null : id;
+        staffDirectoryModal.classList.add('hidden');
+        renderTickets();
+        renderStaffWorkload();
+      });
+    });
   }
 
   // --- 6. EVENT HANDLERS ---
 
-  // Metric Box Clicks (Interactive Filtering)
+  // Metric Box Clicks
   metricCards.forEach(card => {
     card.addEventListener('click', () => {
       const statusFilter = card.getAttribute('data-filter-status');
@@ -425,6 +505,21 @@ document.addEventListener('DOMContentLoaded', () => {
       selectStatus.value = statusFilter;
       renderTickets();
     });
+  });
+
+  btnClearStaffFilter.addEventListener('click', () => {
+    activeFilters.staffId = null;
+    renderTickets();
+    renderStaffWorkload();
+  });
+
+  btnViewAllStaff.addEventListener('click', () => {
+    renderStaffDirectoryModal();
+    staffDirectoryModal.classList.remove('hidden');
+  });
+
+  btnCloseStaffModal.addEventListener('click', () => {
+    staffDirectoryModal.classList.add('hidden');
   });
 
   inputSearch.addEventListener('input', (e) => {
