@@ -1,0 +1,113 @@
+/* =====================================================================
+   Ledger — QMS design tokens
+   Layout concept: a quiet ink-teal "ledger" shell (fixed sidebar + work
+   canvas) where colour is reserved for SLA state, so overdue work is the
+   loudest thing on any screen.
+   All colours are tokens. Light values on :root, dark values redefined
+   for prefers-color-scheme and for an explicit [data-theme="dark"].
+   ===================================================================== */
+
+:root {
+  /* Neutrals — cool porcelain with a slight teal bias */
+  --bg: #f2f5f5;
+  --surface: #ffffff;
+  --surface-2: #f7f9f9;
+  --surface-3: #edf1f1;
+  --line: #e0e6e5;
+  --line-strong: #cbd5d4;
+  --ink: #132321;
+  --ink-2: #485957;
+  --ink-3: #74858a;
+
+  /* Brand — ledger teal, with brass used sparingly for "Key" tier & highlights */
+  --brand: #0f5c55;
+  --brand-hover: #0b4a44;
+  --brand-ink: #ffffff;
+  --brand-soft: #e2eeec;
+  --brass: #8d6a2c;
+  --brass-soft: #f3ecdd;
+
+  /* Sidebar */
+  --side: #0c2422;
+  --side-ink: #a9bebb;
+  --side-ink-strong: #ffffff;
+  --side-active: #17403c;
+  --side-line: #1a3633;
+
+  /* Semantic / SLA state (never reused as series colours) */
+  --ok: #1b7a4b;       --ok-soft: #e2f2e9;
+  --warn: #9a6200;     --warn-soft: #faefd7;
+  --crit: #b3322a;     --crit-soft: #f8e3e1;
+  --pend: #5a4ab5;     --pend-soft: #ebe8f9;
+  --info: #23609f;     --info-soft: #e2ecf7;
+  --mute: #6c7b7a;     --mute-soft: #eceff0;
+
+  /* Channels */
+  --wa: #128c5a;
+  --mail: #23609f;
+  --phone: #8d6a2c;
+
+  /* Type */
+  --font-display: "Fraunces", "Iowan Old Style", Georgia, serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  --fs-xs: 0.75rem;   /* 12 */
+  --fs-sm: 0.8125rem; /* 13 */
+  --fs-md: 0.875rem;  /* 14 */
+  --fs-lg: 1rem;      /* 16 */
+  --fs-xl: 1.25rem;   /* 20 */
+  --fs-2xl: 1.625rem; /* 26 */
+  --fs-3xl: 2.125rem; /* 34 */
+
+  /* Space / shape */
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --shadow-1: 0 1px 2px rgba(15, 40, 38, .06), 0 1px 1px rgba(15, 40, 38, .04);
+  --shadow-pop: 0 12px 32px rgba(10, 30, 28, .16), 0 2px 6px rgba(10, 30, 28, .08);
+  --scrim: rgba(8, 20, 19, .45);
+  --side-w: 248px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0c1514; --surface: #121f1e; --surface-2: #172725; --surface-3: #1c2f2d;
+    --line: #223533; --line-strong: #2e4643;
+    --ink: #e4eeec; --ink-2: #a3b6b3; --ink-3: #74898a;
+    --brand: #4fb0a3; --brand-hover: #6cc2b6; --brand-ink: #04201d; --brand-soft: #143a36;
+    --brass: #d2ab63; --brass-soft: #362c18;
+    --side: #08100f; --side-ink: #8fa6a3; --side-ink-strong: #ffffff; --side-active: #15302d; --side-line: #142624;
+    --ok: #4cc488; --ok-soft: #11301f;
+    --warn: #e2a843; --warn-soft: #33270e;
+    --crit: #ef7b70; --crit-soft: #3b1714;
+    --pend: #a597f2; --pend-soft: #241f45;
+    --info: #78aef0; --info-soft: #132a44;
+    --mute: #8a9b9a; --mute-soft: #1d2b2a;
+    --wa: #4cc488; --mail: #78aef0; --phone: #d2ab63;
+    --shadow-1: 0 1px 2px rgba(0,0,0,.3);
+    --shadow-pop: 0 12px 32px rgba(0,0,0,.5), 0 2px 6px rgba(0,0,0,.3);
+    --scrim: rgba(0, 0, 0, .6);
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0c1514; --surface: #121f1e; --surface-2: #172725; --surface-3: #1c2f2d;
+  --line: #223533; --line-strong: #2e4643;
+  --ink: #e4eeec; --ink-2: #a3b6b3; --ink-3: #74898a;
+  --brand: #4fb0a3; --brand-hover: #6cc2b6; --brand-ink: #04201d; --brand-soft: #143a36;
+  --brass: #d2ab63; --brass-soft: #362c18;
+  --side: #08100f; --side-ink: #8fa6a3; --side-ink-strong: #ffffff; --side-active: #15302d; --side-line: #142624;
+  --ok: #4cc488; --ok-soft: #11301f;
+  --warn: #e2a843; --warn-soft: #33270e;
+  --crit: #ef7b70; --crit-soft: #3b1714;
+  --pend: #a597f2; --pend-soft: #241f45;
+  --info: #78aef0; --info-soft: #132a44;
+  --mute: #8a9b9a; --mute-soft: #1d2b2a;
+  --wa: #4cc488; --mail: #78aef0; --phone: #d2ab63;
+  --shadow-1: 0 1px 2px rgba(0,0,0,.3);
+  --shadow-pop: 0 12px 32px rgba(0,0,0,.5), 0 2px 6px rgba(0,0,0,.3);
+  --scrim: rgba(0, 0, 0, .6);
+  color-scheme: dark;
+}
