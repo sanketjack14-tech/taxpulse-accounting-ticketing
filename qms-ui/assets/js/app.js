@@ -6,7 +6,6 @@
 const NAV = [
   ["Work", [
     ["dashboard", "Dashboard", "dashboard", ["leadership", "manager", "member", "platform"]],
-    ["inbox", "Intake", "inbox", ["manager", "member"]],
     ["tickets", "Tickets", "ticket", ["leadership", "manager", "member"]],
     ["tasks", "Tasks & compliance", "calendar", ["leadership", "manager", "member", "platform"]],
   ]],
@@ -20,6 +19,7 @@ const NAV = [
     ["sla", "SLA & escalation", "shield", ["leadership", "platform"]],
   ]],
   ["Administration", [
+    ["inbox", "Intake", "inbox", ["sysadmin"]],
     ["users", "Users & access", "users", ["platform", "sysadmin"]],
     ["channels", "Channels", "plug", ["platform", "sysadmin"]],
     ["logs", "System logs", "terminal", ["sysadmin"]],

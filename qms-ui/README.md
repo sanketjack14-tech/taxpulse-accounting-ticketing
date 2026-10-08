@@ -28,7 +28,7 @@ qms-ui/
 |---|---|---|
 | `#login`, `#forgot` | Sign in (email + password, 30-day session, Microsoft SSO, reset) | all |
 | `#dashboard` | Firm / team / personal overview: KPIs, volume, SLA health, workload, needs attention | leadership, manager, member, platform |
-| `#inbox` | Intake: WhatsApp, email and phone logs with AI verdicts and routing | manager, member |
+| `#inbox` | Intake: WhatsApp, email and phone logs with AI verdicts and routing | sysadmin |
 | `#tickets` | Ticket list: tabs for open, overdue, pending acceptance, awaiting approval, reopened, closed | leadership, manager, member |
 | `#ticket-<ID>` | Ticket detail: status stepper, conversation, composer, SLA, escalation, people, mapping, history | leadership, manager, member |
 | `#tasks` | Compliance calendar, recurring and onboarding tasks | leadership, manager, member, platform |
@@ -45,13 +45,13 @@ qms-ui/
 
 1. **Transfer and acceptance (#13, #14):** as *Team member*, open `#ticket-TKT-1036` and click **Accept ownership**. As *Manager*, open any open ticket and click **Assign / reassign**.
 2. **Maker–checker closure (#12):** as *Team member*, click **Mark resolved** on a ticket. As *Manager*, open `#ticket-TKT-1041` and click **Approve & close**. On a closed ticket, click **Reopen**.
-3. **AI intake (#5, #7, #15):** in Intake, compare a skipped greeting, a split multi-issue message, a linked follow-up and one ticket created from a multi-recipient email.
+3. **AI intake (#5, #7, #15):** as *System admin (IT)*, open Intake and compare a skipped greeting, a split multi-issue message, a linked follow-up and one ticket created from a multi-recipient email.
 
 ## Scope traceability
 
 | # | Scope point | Where it appears |
 |---|---|---|
-| 1 | WhatsApp intake (2 numbers) | Intake rail, Channels → WhatsApp, sidebar health |
+| 1 | WhatsApp intake (2 numbers) | Intake (System admin), Channels → WhatsApp, sidebar health |
 | 2 | M365 email via Graph | Intake, Channels → Microsoft 365 mailboxes |
 | 3 | Phone instructions | "Log phone instruction" drawer (Intake, Tickets) |
 | 4 | Attachments (parse in Phase 2) | "Parse in Phase 2" tags, folder naming in Channels |
