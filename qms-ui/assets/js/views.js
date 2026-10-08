@@ -292,7 +292,7 @@ VIEWS.ticket = (id) => {
         <span>${statusPill(x.status)}</span>
         <span class="dept-card__q">${esc(x.subject)}</span>
         ${person(x.owner)}
-        <span class="t-id">${x.id}</span></a>`; }).join("")}</div>
+        <span><span class="tkt-no tkt-no--sm">${x.id}</span></span></a>`; }).join("")}</div>
       <p class="field__hint" style="margin-top:14px">${user(t.owner).name} coordinates. The parent can be resolved once every department has resolved its part, then one combined reply goes to the client.</p>`,
       { sub: "One query, answered by several departments. Each tagged person owns their part and its SLA.", actions: isOpen(t) ? `<button class="btn btn--sm" data-action="tag-dept" data-val="${t.id}">${icon("plus", "icon--sm")}Tag another department</button>` : "" });
   } else if (t.subs) {
@@ -314,7 +314,7 @@ VIEWS.ticket = (id) => {
 
   return `
     <div>${`<div class="crumbs"><a href="#tickets">Tickets</a>${icon("right", "icon--sm")}${parent ? `<a href="#ticket-${parent.id}" class="mono">${parent.id}</a>${icon("right", "icon--sm")}` : ""}<span class="mono">${t.id}</span></div>`}
-    <header class="page-head"><div style="min-width:0"><h1 class="page-head__title" style="font-size:var(--fs-2xl)">${esc(t.subject)}</h1>
+    <header class="page-head"><div style="min-width:0"><span class="tkt-no tkt-no--lg" style="margin-bottom:10px">${t.id}</span><h1 class="page-head__title" style="font-size:var(--fs-2xl)">${esc(t.subject)}</h1>
       <div class="row" style="margin-top:10px">${statusPill(t.status)}${prio(t.priority)}${channelTag(t.channel)}<span class="tag">${t.type}</span><span class="muted" style="font-size:var(--fs-sm)">${esc(c.name)} · <span class="mono">${c.code}</span></span></div></div>
       <div class="page-head__actions">${actions.join("")}</div></header></div>
     ${banner}

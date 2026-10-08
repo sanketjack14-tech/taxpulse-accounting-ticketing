@@ -107,7 +107,7 @@ const STATUS = {
   assigned: ["Assigned", "brand"],
   progress: ["In progress", "brand"],
   pending: ["Pending acceptance", "pend"],
-  resolved: ["Resolved · awaiting approval", "ok"],
+  resolved: ["Awaiting approval", "ok"],
   closed: ["Closed", ""],
   reopened: ["Reopened", "crit"],
   done: ["Done", "ok"],
@@ -192,27 +192,27 @@ function taggedPeople(t) {
 function ticketRows(list, { showOwner = true, subs = true } = {}) {
   return list.map((t) => {
     const main = `<tr class="is-link" data-href="#ticket-${t.id}">
+      <td><span class="tkt-no">${t.id}</span></td>
       <td>${slaCue(t)}</td>
-      <td><div class="t-title">${esc(t.subject)}<small><span class="mono">${t.id}</span> · ${t.multiDept ? `${t.subs.length} departments` : t.type}${t.followUps ? ` · ${t.followUps} follow-ups linked` : ""}${t.reopens ? ` · reopened ${t.reopens}×` : ""}</small></div></td>
+      <td><div class="t-title">${esc(t.subject)}<small>${channelTag(t.channel)} · ${t.multiDept ? `${t.subs.length} departments` : t.type}${t.followUps ? ` · ${t.followUps} follow-ups linked` : ""}${t.reopens ? ` · reopened ${t.reopens}×` : ""}</small></div></td>
       <td>${clientCell(t.client)}</td>
-      <td>${channelTag(t.channel)}</td>
       ${showOwner ? `<td>${t.multiDept ? taggedPeople(t) : person(t.owner, t.status === "pending" ? `→ ${user(t.transferTo).name.split(" ")[0]} (pending)` : `Backup: ${user(t.backup).name.split(" ")[0]}`)}</td>` : ""}
-      <td>${statusPill(t.status)}</td>
-      <td>${prio(t.priority)}</td>
+      <td><div style="display:grid;gap:6px;justify-items:start">${statusPill(t.status)}${prio(t.priority)}</div></td>
     </tr>`;
     const subRows = subs && t.subs ? t.subs.map((s) => `<tr class="is-link sub-row" data-href="#ticket-${s.id}">
+      <td><span class="tkt-no tkt-no--sub">${s.id}</span></td>
       <td>${slaCue({ ...t, ...s })}</td>
-      <td><div class="t-title">${esc(s.subject)}<small><span class="mono">${s.id}</span> · ${s.dept ? `<span class="tag">${s.dept}</span>` : `${s.type} · sub-ticket`}</small></div></td>
-      <td></td><td></td>
+      <td><div class="t-title">${esc(s.subject)}<small>${s.dept ? `<span class="tag">${s.dept}</span>` : `${s.type} · sub-ticket`}</small></div></td>
+      <td></td>
       ${showOwner ? `<td>${person(s.owner)}</td>` : ""}
-      <td>${statusPill(s.status)}</td><td></td></tr>`).join("") : "";
+      <td>${statusPill(s.status)}</td></tr>`).join("") : "";
     return main + subRows;
   }).join("");
 }
 function ticketTable(list, opts = {}) {
   if (!list.length) return `<div class="empty">No tickets match these filters.</div>`;
   return `<div class="table-wrap"><table class="table">
-    <thead><tr><th>SLA</th><th>Query</th><th>Client</th><th>Channel</th>${opts.showOwner === false ? "" : "<th>Owner</th>"}<th>Status</th><th>Priority</th></tr></thead>
+    <thead><tr><th>Ticket no.</th><th>SLA</th><th>Query</th><th>Client</th>${opts.showOwner === false ? "" : "<th>Owner</th>"}<th>Status &amp; priority</th></tr></thead>
     <tbody>${ticketRows(list, opts)}</tbody></table></div>`;
 }
 

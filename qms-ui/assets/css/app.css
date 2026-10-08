@@ -262,6 +262,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .table .t-right { text-align: right; }
 .t-title { font-weight: 500; color: var(--ink); min-width: 220px; max-width: 380px; }
 .t-title small { display: block; font-weight: 400; color: var(--ink-3); font-size: var(--fs-xs); margin-top: 2px; }
+.tkt-no { display: inline-block; font-family: var(--font-mono); font-size: var(--fs-sm); font-weight: 500; color: var(--ink); background: var(--surface-3); border: 1px solid var(--line); border-radius: 6px; padding: 2px 8px; white-space: nowrap; letter-spacing: -.01em; }
+.tkt-no--sub { font-size: var(--fs-xs); color: var(--ink-2); margin-left: 14px; }
+.tkt-no--sm { font-size: var(--fs-xs); }
+.tkt-no--lg { font-size: var(--fs-md); padding: 3px 10px; background: var(--brand-soft); color: var(--brand); border-color: transparent; }
 .t-id { font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--ink-3); white-space: nowrap; }
 .sub-row td { background: var(--surface-2); }
 .sub-row .t-title { padding-left: 18px; position: relative; }
