@@ -6,17 +6,17 @@
 const NAV = [
   ["Work", [
     ["dashboard", "Dashboard", "dashboard", ["leadership", "manager", "member", "platform"]],
-    ["tickets", "Tickets", "ticket", ["leadership", "manager", "member"]],
-    ["tasks", "Tasks & compliance", "calendar", ["leadership", "manager", "member", "platform"]],
+    ["tickets", "Tickets", "ticket", ["manager", "member"]],
+    ["tasks", "Tasks & compliance", "calendar", ["manager", "member", "platform"]],
   ]],
   ["Insight", [
     ["reports", "Reports", "chart", ["leadership", "manager"]],
-    ["knowledge", "Knowledge base", "book", ["leadership", "manager", "member", "platform"]],
+    ["knowledge", "Knowledge base", "book", ["manager", "member", "platform"]],
   ]],
   ["Masters", [
-    ["clients", "Clients", "building", ["leadership", "manager", "platform"]],
-    ["templates", "Task templates", "layers", ["manager", "platform"]],
-    ["sla", "SLA & escalation", "shield", ["leadership", "platform"]],
+    ["clients", "Clients", "building", ["platform"]],
+    ["templates", "Task templates", "layers", ["platform"]],
+    ["sla", "SLA & escalation", "shield", ["platform"]],
   ]],
   ["Administration", [
     ["inbox", "Intake", "inbox", ["sysadmin"]],
@@ -32,6 +32,28 @@ function parseRoute() {
   if (h.startsWith("client-")) return { name: "client", arg: h.slice(7), nav: "clients" };
   if (h === "forgot") return { name: "login", arg: "forgot" };
   return { name: VIEWS[h] ? h : "dashboard", nav: h };
+}
+
+/* Can the active role open this hash? Used to drop links to screens a role doesn't have. */
+function canOpen(hash) {
+  const h = hash.replace(/^#/, "");
+  const key = h.startsWith("ticket-") ? "tickets" : h.startsWith("client-") ? "clients" : h;
+  const item = NAV.flatMap(([, items]) => items).find((i) => i[0] === key);
+  return !item || item[3].includes(state.role);
+}
+function stripUnreachableLinks(root) {
+  root.querySelectorAll("[data-href]").forEach((el) => {
+    if (canOpen(el.dataset.href)) return;
+    el.removeAttribute("data-href");
+    el.classList.remove("is-link");
+    el.classList.add("no-link");
+  });
+  root.querySelectorAll('a[href^="#"]').forEach((el) => {
+    if (canOpen(el.getAttribute("href"))) return;
+    const span = document.createElement("span");
+    span.innerHTML = el.innerHTML;
+    el.replaceWith(span);
+  });
 }
 
 function navCount(key) {
@@ -87,6 +109,7 @@ function render() {
     return;
   }
   app.innerHTML = renderShell(route, VIEWS[route.name](route.arg));
+  stripUnreachableLinks(app);
 }
 
 /* ---------- dialogs ---------- */

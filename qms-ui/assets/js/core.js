@@ -225,6 +225,7 @@ function openSheet(html, { center = false } = {}) {
   el.innerHTML = html;
   el.addEventListener("click", (e) => { if (e.target === el) closeSheet(); });
   document.body.appendChild(el);
+  if (typeof stripUnreachableLinks === "function") stripUnreachableLinks(el);
   const f = el.querySelector("input, select, textarea, button.btn--primary");
   if (f) f.focus();
 }

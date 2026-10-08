@@ -4,6 +4,8 @@ A clickable, high-fidelity UI prototype for the client's QMS, built from **QMS -
 It lives in its own folder and doesn't share code with the existing TaxPulse app in the repo root.
 
 - **No build step.** Plain HTML, CSS and JavaScript. Open `index.html` in Chrome or Safari, or run `npx serve qms-ui`.
+- **Leadership** sees only Dashboard and Reports (scope #38). Tiles and rows that would open a ticket are read-only for them.
+- **Masters** (Clients, Task templates, SLA & escalation) are for Platform admin only.
 - **Role switcher** in the top bar ("Viewing as") shows what each role sees (scope #36–#40).
 - **Light and dark themes** from one token file. The layout is responsive down to phone width (#47).
 - All data is sample data in `assets/js/data.js`, with "now" fixed at **Wed 7 Oct 2026, 11:30 IST** so SLA timers always render the same way.
@@ -29,14 +31,14 @@ qms-ui/
 | `#login`, `#forgot` | Sign in (email + password, 30-day session, Microsoft SSO, reset) | all |
 | `#dashboard` | Firm / team / personal overview: KPIs, volume, SLA health, workload, needs attention | leadership, manager, member, platform |
 | `#inbox` | Intake: WhatsApp, email and phone logs with AI verdicts and routing | sysadmin |
-| `#tickets` | Ticket list: tabs for open, overdue, pending acceptance, awaiting approval, reopened, closed | leadership, manager, member |
-| `#ticket-<ID>` | Ticket detail: status stepper, conversation, composer, SLA, escalation, people, mapping, history | leadership, manager, member |
-| `#tasks` | Compliance calendar, recurring and onboarding tasks | leadership, manager, member, platform |
+| `#tickets` | Ticket list: tabs for open, overdue, pending acceptance, awaiting approval, reopened, closed | manager, member |
+| `#ticket-<ID>` | Ticket detail: status stepper, conversation, composer, SLA, escalation, people, mapping, history | manager, member |
+| `#tasks` | Compliance calendar, recurring and onboarding tasks | manager, member, platform |
 | `#reports` | Daily exception report and analytics | leadership, manager |
-| `#knowledge` | Searchable knowledge base | all but sysadmin |
-| `#clients`, `#client-<id>` | Client master and client detail with task customisation | leadership, manager, platform |
-| `#templates` | Task template master | manager, platform |
-| `#sla` | SLA matrix, reminders, escalation and unaccepted-transfer rules | leadership, platform |
+| `#knowledge` | Searchable knowledge base | manager, member, platform |
+| `#clients`, `#client-<id>` | Client master and client detail with task customisation | platform |
+| `#templates` | Task template master | platform |
+| `#sla` | SLA matrix, reminders, escalation and unaccepted-transfer rules | platform |
 | `#users` | Users and access | platform, sysadmin |
 | `#channels` | WhatsApp, M365, auto-acknowledgement, attachments, outgoing email | platform, sysadmin |
 | `#logs` | System logs | sysadmin |

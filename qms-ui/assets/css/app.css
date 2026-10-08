@@ -306,6 +306,11 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .alist__item { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px 20px; border-top: 1px solid var(--line); cursor: pointer; }
 .alist__item:first-child { border-top: 0; }
 .alist__item:hover { background: var(--surface-2); }
+.alist__item.no-link { cursor: default; }
+.alist__item.no-link:hover { background: none; }
+.alist__item.no-link .btn { display: none; }
+.kpi.no-link { cursor: default; }
+.kpi.no-link:hover { background: none; }
 .alist__icon { width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; }
 .alist__icon--crit { background: var(--crit-soft); color: var(--crit); }
 .alist__icon--pend { background: var(--pend-soft); color: var(--pend); }

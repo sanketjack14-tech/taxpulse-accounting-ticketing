@@ -85,7 +85,7 @@ VIEWS.dashboard = () => {
       return `<tr><td>${person(m.id, m.title)}</td><td class="t-right num">${o}</td><td class="t-right num" style="color:${od ? "var(--crit)" : "inherit"};font-weight:${od ? 600 : 400}">${od}</td><td class="t-right num">${pin}</td><td class="t-right num">${res}</td><td style="width:160px">${meter(load, load > 80 ? "meter--crit" : load > 55 ? "meter--warn" : "")}</td></tr>`;
     }).join("");
     lower = `<div class="grid grid--wide-narrow">
-      ${panel("Team workload", `<div class="table-wrap"><table class="table"><thead><tr><th>Member</th><th class="t-right">Open</th><th class="t-right">Overdue</th><th class="t-right">To accept</th><th class="t-right">Resolved</th><th>Load</th></tr></thead><tbody>${rows}</tbody></table></div>`, { flush: true, sub: "Click a name in Tickets to filter by owner" })}
+      ${panel("Team workload", `<div class="table-wrap"><table class="table"><thead><tr><th>Member</th><th class="t-right">Open</th><th class="t-right">Overdue</th><th class="t-right">To accept</th><th class="t-right">Resolved</th><th>Load</th></tr></thead><tbody>${rows}</tbody></table></div>`, { flush: true, sub: "Open work per person, internal and external" })}
       ${attentionPanel}
     </div>`;
   }
