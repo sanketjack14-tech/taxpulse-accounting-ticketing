@@ -14,7 +14,9 @@ const ROLES = {
 
 const state = {
   role: "manager",
-  period: "day",
+  period: "day",          // shared by Dashboard and Reports: day | week | month | quarter | custom
+  customFrom: "2026-09-21",
+  customTo: "2026-10-07",
   dashOwner: "all",
   dashClient: "all",
   ticketTab: "open",
@@ -153,6 +155,31 @@ function segmented(items, active, action) {
 }
 function selectEl(id, options, value, action) {
   return `<select class="select" id="${id}" data-change="${action}" style="width:auto">${options.map(([v, l]) => `<option value="${v}" ${v === value ? "selected" : ""}>${esc(l)}</option>`).join("")}</select>`;
+}
+
+/* ---------- reporting period (used on every report-style view) ---------- */
+const PERIODS = [["day", "Daily"], ["week", "Weekly"], ["month", "Monthly"], ["quarter", "Quarterly"], ["custom", "Custom"]];
+const toDate = (iso) => { const [y, m, d] = iso.split("-").map(Number); return new Date(y, m - 1, d); };
+const fmtDay = (d, withYear = true) => d.toLocaleDateString("en-IN", { day: "numeric", month: "short", ...(withYear ? { year: "numeric" } : {}) });
+function periodDays() {
+  if (state.period !== "custom") return { day: 1, week: 3, month: 7, quarter: 7 }[state.period];
+  return Math.round((toDate(state.customTo) - toDate(state.customFrom)) / 86400000) + 1;
+}
+function periodLabel() {
+  return {
+    day: "Today · Wed 7 Oct 2026",
+    week: "This week · 5–7 Oct 2026",
+    month: "October 2026 · to date",
+    quarter: "Q3 FY 2026-27 (Oct–Dec) · to date",
+    custom: `${fmtDay(toDate(state.customFrom), toDate(state.customFrom).getFullYear() !== toDate(state.customTo).getFullYear())} – ${fmtDay(toDate(state.customTo))} · ${periodDays()} days`,
+  }[state.period];
+}
+function periodPicker() {
+  const custom = state.period === "custom";
+  return `<div class="period">${segmented(PERIODS, state.period, "period")}${custom ? `
+    <label class="period__date"><span class="sr-only">From</span><input type="date" class="input" id="period-from" value="${state.customFrom}" max="2026-10-07" data-change="customFrom"></label>
+    <span class="muted">to</span>
+    <label class="period__date"><span class="sr-only">To</span><input type="date" class="input" id="period-to" value="${state.customTo}" max="2026-10-07" data-change="customTo"></label>` : ""}</div>`;
 }
 
 /* ---------- ticket table (shared by dashboard, tickets, client detail) ---------- */

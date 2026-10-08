@@ -5,6 +5,7 @@ It lives in its own folder and doesn't share code with the existing TaxPulse app
 
 - **No build step.** Plain HTML, CSS and JavaScript. Open `index.html` in Chrome or Safari, or run `npx serve qms-ui`.
 - **Leadership** sees only Dashboard and Reports (scope #38). Tiles and rows that would open a ticket are read-only for them.
+- **Reporting period:** Dashboard and Reports share one picker (Daily, Weekly, Monthly, Quarterly, Custom date range).
 - **Masters** (Clients, Task templates, SLA & escalation) are for Platform admin only.
 - **Role switcher** in the top bar ("Viewing as") shows what each role sees (scope #36–#40).
 - **Light and dark themes** from one token file. The layout is responsive down to phone width (#47).
@@ -74,7 +75,7 @@ qms-ui/
 | 19 | Escalation matrix | Ticket SLA panel ladder, SLA & escalation page |
 | 20 | Leadership dashboard | Dashboard as Leadership, with filters and Day/Week/Month/Quarter |
 | 21 | User panel by role | Dashboard and Tickets scope change with role |
-| 22 | Exception reporting | Reports → Daily exceptions |
+| 22 | Exception reporting | Reports → Exceptions (daily, weekly, monthly, quarterly or custom range) |
 | 23 | Analytics | Reports → Analytics (accountant, client, engagement, provider) |
 | 24 | Knowledge base | Knowledge base page; "Add to knowledge base" on resolve; similar queries on ticket |
 | 25 | Task master | Task templates |

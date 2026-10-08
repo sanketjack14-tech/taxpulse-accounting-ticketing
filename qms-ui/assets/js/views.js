@@ -17,7 +17,7 @@ VIEWS.dashboard = () => {
   const overdue = open.filter(isOverdue);
   const pending = list.filter((t) => t.status === "pending");
   const awaiting = list.filter((t) => t.status === "resolved");
-  const closedN = { day: 9, week: 46, month: 187, quarter: 552 }[state.period];
+  const closedN = { day: 9, week: 31, month: 58, quarter: 58, custom: Math.round(periodDays() * 8.5) }[state.period];
   const scale = state.role === "member" ? 0.18 : state.role === "manager" ? 0.55 : 1;
 
   const title = state.role === "member" ? `Good morning, ${u.name.split(" ")[0]}` : state.role === "manager" ? "Team overview" : "Firm overview";
@@ -27,11 +27,19 @@ VIEWS.dashboard = () => {
   const ownerOpts = [["all", state.role === "member" ? "Me" : "All accountants"], ...members.map((m) => [m.id, m.name])];
   const clientOpts = [["all", "All clients"], ...CLIENTS.map((c) => [c.id, `${c.code} · ${c.name}`])];
 
-  const periods = { day: ["Last 14 days", SERIES_14D, ["24 Sep", "25", "26", "27", "28", "29", "30", "1 Oct", "2", "3", "4", "5", "6", "Today"]],
-    week: ["Last 8 weeks", [96, 104, 118, 92, 121, 133, 110, 61], ["W33", "W34", "W35", "W36", "W37", "W38", "W39", "W40"]],
-    month: ["Last 6 months", [402, 388, 455, 520, 497, 168], ["May", "Jun", "Jul", "Aug", "Sep", "Oct"]],
-    quarter: ["Last 4 quarters", [1180, 1265, 1342, 1515], ["Q3 FY26", "Q4 FY26", "Q1 FY27", "Q2 FY27"]] };
-  const [pLabel, pVals, pLabels] = periods[state.period];
+  const periods = {
+    day: ["Daily · last 14 days", SERIES_14D, ["24 Sep", "25", "26", "27", "28", "29", "30", "1 Oct", "2", "3", "4", "5", "6", "Today"]],
+    week: ["Weekly · last 8 weeks", [96, 104, 118, 92, 121, 133, 110, 61], ["W34", "W35", "W36", "W37", "W38", "W39", "W40", "W41"]],
+    month: ["Monthly · last 6 months", [402, 388, 455, 520, 497, 168], ["May", "Jun", "Jul", "Aug", "Sep", "Oct"]],
+    quarter: ["Quarterly · last 4 quarters", [1180, 1265, 1342, 412], ["Q4 FY26", "Q1 FY27", "Q2 FY27", "Q3 FY27"]],
+  };
+  if (state.period === "custom") {
+    const from = toDate(state.customFrom), n = Math.min(periodDays(), 62);
+    const days = Array.from({ length: n }, (_, i) => new Date(from.getTime() + i * 86400000));
+    periods.custom = [`Custom · ${periodLabel()}`, days.map((d, i) => [0, 6].includes(d.getDay()) ? 4 + (i % 3) : 14 + ((i * 7 + 3) % 13)),
+      days.map((d, i) => (i === 0 || d.getDate() === 1 ? fmtDay(d, false) : String(d.getDate()))), days.map((d) => fmtDay(d))];
+  }
+  const [pLabel, pVals, pLabels, pTips] = periods[state.period];
   const vals = pVals.map((v) => Math.max(1, Math.round(v * scale)));
 
   const kpis = `<div class="kpis">
@@ -39,7 +47,7 @@ VIEWS.dashboard = () => {
     <button class="kpi kpi--crit" data-href="#tickets" data-set="ticketTab=overdue"><span class="kpi__label">${icon("alert", "icon--sm")}Overdue</span><span class="kpi__value">${overdue.length}</span><span class="kpi__delta">${overdue.filter((t) => t.ageMin > 1440).length} pending over 24h</span></button>
     <button class="kpi kpi--pend" data-href="#tickets" data-set="ticketTab=pending"><span class="kpi__label">${icon("swap", "icon--sm")}Pending acceptance</span><span class="kpi__value">${pending.length}</span><span class="kpi__delta">Oldest ${pending.length ? fmtDur(Math.max(...pending.map((t) => Math.min(t.ageMin, 160)))) : "—"}</span></button>
     <button class="kpi" data-href="#tickets" data-set="ticketTab=approval"><span class="kpi__label">${icon("usercheck", "icon--sm")}Awaiting approval</span><span class="kpi__value">${awaiting.length}</span><span class="kpi__delta">Maker–checker queue</span></button>
-    <button class="kpi" data-href="#tickets" data-set="ticketTab=closed"><span class="kpi__label">${icon("check", "icon--sm")}Closed</span><span class="kpi__value">${Math.round(closedN * scale)}</span><span class="kpi__delta"><b class="down-good">94%</b> within SLA</span></button>
+    <button class="kpi" data-href="#tickets" data-set="ticketTab=closed"><span class="kpi__label">${icon("check", "icon--sm")}Closed · ${{ day: "today", week: "this week", month: "this month", quarter: "this quarter", custom: "in range" }[state.period]}</span><span class="kpi__value">${Math.round(closedN * scale)}</span><span class="kpi__delta"><b class="down-good">94%</b> within SLA</span></button>
   </div>`;
 
   const slaCounts = { ok: 0, warn: 0, crit: 0, pend: 0 };
@@ -63,9 +71,9 @@ VIEWS.dashboard = () => {
   ].slice(0, 7);
   const attentionPanel = panel("Needs attention", `<div class="alist">${attention.map(([c, ic, ti, meta, id, cta]) => `<div class="alist__item" data-href="#ticket-${id}"><span class="alist__icon alist__icon--${c}">${icon(ic, "icon--sm")}</span><div style="min-width:0"><div class="alist__title">${esc(ti)}</div><div class="alist__meta">${esc(meta)}</div></div><span class="btn btn--sm">${cta}</span></div>`).join("") || `<div class="empty">Nothing needs you right now.</div>`}</div>`, { flush: true, sub: "Escalations, transfers and approvals waiting on someone" });
 
-  const volume = panel("Ticket volume", `${barChart(vals, pLabels, { highlightLast: true })}
+  const volume = panel("Ticket volume", `${barChart(vals, pLabels, { highlightLast: state.period !== "custom" || state.customTo === "2026-10-07", tipLabels: pTips })}
     <div class="legend" style="margin-top:8px"><span><span class="legend__sw" style="background:var(--brand)"></span>New tickets</span><span><span class="legend__sw" style="background:var(--brass)"></span>Current period (partial)</span></div>`,
-    { sub: `${pLabel} · WhatsApp, email and logged calls`, actions: segmented([["day", "Day"], ["week", "Week"], ["month", "Month"], ["quarter", "Quarter"]], state.period, "period") });
+    { sub: `${pLabel} · WhatsApp, email and logged calls`, actions: periodPicker() });
 
   let lower;
   if (state.role === "member") {
@@ -90,7 +98,7 @@ VIEWS.dashboard = () => {
     </div>`;
   }
 
-  return `${pageHead(title, sub, `${selectEl("dash-owner", ownerOpts, state.dashOwner, "dashOwner")}${selectEl("dash-client", clientOpts, state.dashClient, "dashClient")}`)}
+  return `${pageHead(title, sub, `${state.role === "member" ? "" : selectEl("dash-owner", ownerOpts, state.dashOwner, "dashOwner")}${selectEl("dash-client", clientOpts, state.dashClient, "dashClient")}`)}
     ${kpis}
     <div class="grid grid--wide-narrow">${volume}${slaPanel}</div>
     ${state.role === "member" ? attentionPanel : ""}
@@ -416,9 +424,9 @@ VIEWS.knowledge = () => {
 VIEWS.reports = () => {
   let body;
   if (state.reportsTab === "exceptions") {
-    const sec = (title, sub, list, extra = "") => panel(`${title} <span class="tab__n">${list.length}</span>`, list.length ? ticketTable(list, { subs: false }) : `<div class="empty">None today.</div>`, { flush: true, sub, actions: extra });
+    const sec = (title, sub, list, extra = "") => panel(`${title} <span class="tab__n">${list.length}</span>`, list.length ? ticketTable(list, { subs: false }) : `<div class="empty">None in this period.</div>`, { flush: true, sub, actions: extra });
     const all = TICKETS;
-    body = `<div class="banner banner--info"><span class="banner__icon">${icon("mail")}</span><div class="banner__body"><span class="banner__title">Daily exception report · Wed 7 Oct 2026, 09:00</span><span class="banner__text">Emailed every working day to Rohan Mehta, Priya Iyer and Sameer Joshi.</span></div><div class="banner__actions"><button class="btn btn--sm" data-action="schedule">Edit schedule</button><button class="btn btn--sm" data-action="export">${icon("download", "icon--sm")}Download</button></div></div>
+    body = `<div class="banner banner--info"><span class="banner__icon">${icon("mail")}</span><div class="banner__body"><span class="banner__title">${{ day: "Daily", week: "Weekly", month: "Monthly", quarter: "Quarterly", custom: "Custom" }[state.period]} exception report · ${periodLabel()}</span><span class="banner__text">${state.period === "custom" ? "One-off report for the dates you picked." : "Emailed automatically to Rohan Mehta, Priya Iyer and Sameer Joshi."} Pending-age buckets are measured as of today.</span></div><div class="banner__actions"><button class="btn btn--sm" data-action="schedule">Edit schedule</button><button class="btn btn--sm" data-action="export">${icon("download", "icon--sm")}Download</button></div></div>
       ${sec("Pending over 72 hours", "Open tickets received more than 3 days ago", all.filter((t) => isOpen(t) && t.ageMin > 4320))}
       ${sec("Pending over 24 hours", "Open tickets received 1–3 days ago", all.filter((t) => isOpen(t) && t.ageMin > 1440 && t.ageMin <= 4320))}
       ${sec("Reopened queries", "Clients reopened these after closure", all.filter((t) => t.status === "reopened"))}
@@ -426,19 +434,19 @@ VIEWS.reports = () => {
       ${sec("Unaccepted reassignments", "Transfers still waiting for the new owner", all.filter((t) => t.status === "pending"))}`;
   } else {
     const dims = { accountant: USERS.filter((u) => u.role === "member" && u.active).map((u) => [u.name, u.title]), client: CLIENTS.map((c) => [c.name, c.code]), engagement: ["GST", "TDS", "Income Tax", "ROC", "Audit", "PF/ESI", "Accounting"].map((e) => [e, "Engagement type"]), provider: ["CS", "GST", "Income Tax", "Auditor", "PF Consultant"].map((e) => [e, "Service provider"]) }[state.analyticsDim];
-    const rows = dims.map(([n, m], i) => { const seed = (n.length * 7 + i * 13) % 17; return { n, m, vol: 18 + seed * 4, frt: (1.1 + (seed % 7) * 0.45).toFixed(1), res: 82 + (seed % 15), tat: (3 + (seed % 9) * 1.3).toFixed(1), reo: ((seed % 5) * 1.4).toFixed(1) }; });
+    const scale = { day: 0.05, week: 0.25, month: 1, quarter: 3, custom: periodDays() / 30 }[state.period];
+    const rows = dims.map(([n, m], i) => { const seed = (n.length * 7 + i * 13) % 17; return { n, m, vol: Math.max(1, Math.round((18 + seed * 4) * scale)), frt: (1.1 + (seed % 7) * 0.45).toFixed(1), res: 82 + (seed % 15), tat: (3 + (seed % 9) * 1.3).toFixed(1), reo: ((seed % 5) * 1.4).toFixed(1) }; });
     const maxF = Math.max(...rows.map((r) => +r.frt));
     body = `<div class="grid grid--wide-narrow">
       ${panel("Breakdown", `<div class="table-wrap"><table class="table"><thead><tr><th>${{ accountant: "Accountant", client: "Client", engagement: "Engagement", provider: "Service provider" }[state.analyticsDim]}</th><th class="t-right">Volume</th><th class="t-right">Median 1st response</th><th class="t-right">Resolved in SLA</th><th class="t-right">Avg TAT</th><th class="t-right">Reopen rate</th></tr></thead><tbody>
         ${rows.map((r) => `<tr><td><div class="t-title">${esc(r.n)}<small>${esc(r.m)}</small></div></td><td class="t-right num">${r.vol}</td><td class="t-right num">${r.frt} h</td><td class="t-right num" style="color:${r.res < 88 ? "var(--warn)" : "inherit"}">${r.res}%</td><td class="t-right num">${r.tat} h</td><td class="t-right num">${r.reo}%</td></tr>`).join("")}
-      </tbody></table></div>`, { flush: true, sub: "Last 30 days" })}
+      </tbody></table></div>`, { flush: true, sub: periodLabel(), actions: segmented([["accountant", "Accountant"], ["client", "Client"], ["engagement", "Engagement"], ["provider", "Provider"]], state.analyticsDim, "analyticsDim") })}
       ${panel("Median first response", `<div class="stack">${rows.map((r) => `<div class="hbar" data-tip="${esc(r.n)}: ${r.frt} h median first response"><span class="hbar__label">${esc(r.n)}</span><span class="hbar__track"><span class="hbar__fill ${+r.frt > 3 ? "hbar__fill--warn" : ""}" style="display:block;width:${(+r.frt / maxF) * 100}%"></span></span><span class="hbar__val">${r.frt} h</span></div>`).join("")}</div>
-        <div class="legend" style="margin-top:14px"><span><span class="legend__sw" style="background:var(--brand)"></span>Within 3 h target</span><span><span class="legend__sw" style="background:var(--warn)"></span>Above target</span></div>`, { sub: "Hours, last 30 days" })}
+        <div class="legend" style="margin-top:14px"><span><span class="legend__sw" style="background:var(--brand)"></span>Within 3 h target</span><span><span class="legend__sw" style="background:var(--warn)"></span>Above target</span></div>`, { sub: `Hours · ${periodLabel()}` })}
     </div>`;
   }
-  return `${pageHead("Reports", "Daily exceptions for follow-up, and performance by accountant, client, engagement type and service provider.",
-      state.reportsTab === "analytics" ? segmented([["accountant", "Accountant"], ["client", "Client"], ["engagement", "Engagement"], ["provider", "Provider"]], state.analyticsDim, "analyticsDim") : "")}
-    ${tabs([["exceptions", "Daily exceptions"], ["analytics", "Analytics"]], state.reportsTab, "reportsTab")}
+  return `${pageHead("Reports", "Exceptions for follow-up, and performance by accountant, client, engagement type and service provider.", periodPicker())}
+    ${tabs([["exceptions", "Exceptions"], ["analytics", "Analytics"]], state.reportsTab, "reportsTab")}
     ${body}`;
 };
 

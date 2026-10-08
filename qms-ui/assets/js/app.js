@@ -245,6 +245,7 @@ document.addEventListener("change", (e) => {
   if (!k) return;
   state[k] = e.target.value;
   if (k === "role") { state.dashOwner = "all"; store.set("role", e.target.value); }
+  if ((k === "customFrom" || k === "customTo") && state.customFrom > state.customTo) [state.customFrom, state.customTo] = [state.customTo, state.customFrom];
   render();
 });
 document.addEventListener("input", (e) => {
