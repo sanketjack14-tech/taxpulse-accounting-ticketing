@@ -135,6 +135,7 @@ VIEWS.inbox = () => {
       link: () => `<div class="banner banner--info"><span class="banner__icon">${icon("link")}</span><div class="banner__body"><span class="banner__title">Linked as a follow-up to ${sel.ticket}</span><span class="banner__text">${esc(t.subject)} · owner ${user(t.owner).name}. No new ticket created; the owner is notified.</span></div><div class="banner__actions"><a class="btn btn--sm" href="#ticket-${sel.ticket}">Open ticket</a></div></div>`,
     }[sel.verdict]();
     detail = `
+      <button class="btn btn--sm btn--ghost inbox__back" data-action="inboxBack">${icon("left", "icon--sm")}All messages</button>
       <div class="row row--between"><div class="row">${channelTag(sel.channel)}<span class="muted">via ${esc(sel.via)}</span></div><span class="muted num">${sel.time}</span></div>
       <div><h2 style="font-size:var(--fs-xl);font-weight:600">${esc(sel.subject || sel.org)}</h2><p class="muted">${esc(sel.from)} · ${esc(sel.org)}${sel.to ? ` · to ${sel.to.length} people` : ""}</p></div>
       <div class="msg__bubble msg__text">${esc(sel.body)}</div>
@@ -153,12 +154,12 @@ VIEWS.inbox = () => {
 
   return `${pageHead("Intake", "Every WhatsApp message, email and logged call lands here first. The AI decides what becomes a ticket; your team can override it.",
       `<button class="btn" data-action="log-call">${icon("phone", "icon--sm")}Log phone instruction</button>`)}
-    <div class="inbox">
+    <div class="inbox ${state.inboxOpen ? "is-detail" : ""}">
       <aside class="inbox__rail">
         <p class="eyebrow" style="padding:4px 10px 8px">View</p>
         ${filters.map(([k, l, ic, n]) => `<button class="inbox__railitem ${k === f ? "is-active" : ""}" data-action="inboxFilter" data-val="${k}">${icon(ic, "icon--sm")}${l}<span class="nav__count">${n}</span></button>`).join("")}
-        <p class="eyebrow" style="padding:16px 10px 8px">Connected</p>
-        <div class="channel-health" style="padding:0 10px;color:var(--ink-2)">
+        <p class="eyebrow inbox__health" style="padding:16px 10px 8px">Connected</p>
+        <div class="channel-health inbox__health" style="padding:0 10px;color:var(--ink-2)">
           <div class="channel-health__row"><span class="dot"></span>+91 98200 41110</div>
           <div class="channel-health__row"><span class="dot"></span>+91 98200 41120</div>
           <div class="channel-health__row"><span class="dot"></span>queries@</div>

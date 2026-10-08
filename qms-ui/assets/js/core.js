@@ -22,6 +22,7 @@ const state = {
   ticketType: "all",
   inboxFilter: "all",
   inboxSel: "m1",
+  inboxOpen: false, // phone only: showing one message full-screen
   tasksTab: "calendar",
   reportsTab: "exceptions",
   analyticsDim: "accountant",
