@@ -132,6 +132,17 @@ function resolveDialog(id) {
     <div class="banner banner--info"><span class="banner__icon">${icon("usercheck")}</span><div class="banner__body"><span class="banner__text">Goes to <b>${user(t.escalation).name}</b> for approval. Once approved, the client is emailed that the query is closed, with a link to reopen it.</span></div></div>`,
     `<button class="btn" data-action="close-sheet">Cancel</button><button class="btn btn--primary" data-action="do-resolve" data-val="${t.id}">Submit for approval</button>`), { center: true });
 }
+function tagDeptDialog(id) {
+  const t = findTicket(id);
+  const used = new Set((t.subs || []).map((s) => s.dept));
+  const depts = DEPARTMENTS.filter((d) => !used.has(d.name));
+  openSheet(sheet("drawer", "Tag a department", `<span class="mono">${t.id}</span> · ${esc(t.subject)}`, `
+    <div class="banner banner--info"><span class="banner__icon">${icon("split")}</span><div class="banner__body"><span class="banner__text">${t.multiDept ? "Adds another part to this query." : `This ticket becomes a multi-department query. ${user(t.owner).name} stays as coordinator and the current work becomes the first part.`} The tagged person must accept, and their part gets its own SLA and reminders.</span></div></div>
+    <div class="field"><label class="field__label" for="td-dept">Department</label><select class="select" id="td-dept">${depts.map((d) => `<option>${d.name}</option>`).join("")}</select></div>
+    <div class="field"><span class="field__label">Person to tag</span><div class="pick" role="radiogroup">${USERS.filter((u) => u.role === "member" && u.active).map((p, i) => `<label class="pick__opt ${i === 0 ? "is-active" : ""}"><input type="radio" name="tagperson" value="${p.id}" ${i === 0 ? "checked" : ""} class="sr-only">${av(p.id, "sm")}<span><span style="font-weight:500">${esc(p.name)}</span><span class="muted" style="font-size:var(--fs-xs);display:block">${esc(p.title)} · ${esc(p.team)}</span></span><span class="muted num" style="font-size:var(--fs-xs)">${TICKETS.filter((x) => x.owner === p.id && isOpen(x)).length} open</span></label>`).join("")}</div></div>
+    <div class="field"><label class="field__label" for="td-ask">What should this department answer?</label><textarea class="textarea" id="td-ask" placeholder="e.g. Confirm TDS treatment on the vendor payments mentioned in point 2"></textarea></div>`,
+    `<button class="btn" data-action="close-sheet">Cancel</button><button class="btn btn--primary" data-action="do-tag-dept" data-val="${t.id}">Tag department</button>`));
+}
 function logCallDialog() {
   openSheet(sheet("drawer", "Log a phone instruction", "Creates a ticket with the same SLA and routing as WhatsApp and email.", `
     <div class="form-grid">
@@ -182,6 +193,22 @@ const actions = {
   reassign: reassignDialog,
   resolve: resolveDialog,
   "log-call": logCallDialog,
+  "tag-dept": tagDeptDialog,
+  "do-tag-dept": (id) => {
+    const t = findTicket(id);
+    const dept = document.getElementById("td-dept").value;
+    const who = document.querySelector('input[name="tagperson"]:checked').value;
+    const ask = document.getElementById("td-ask").value.trim();
+    if (!t.subs) {
+      const own = DEPARTMENTS.find((d) => d.types.includes(t.type));
+      t.subs = [{ id: `${t.id}.1`, subject: t.subject, type: t.type, dept: own ? own.name : "Owner's department", owner: t.owner, status: t.status, ageMin: t.ageMin, tatMin: t.tatMin }];
+    }
+    t.parent = true; t.multiDept = true;
+    const d = DEPARTMENTS.find((x) => x.name === dept);
+    t.subs.push({ id: `${t.id}.${t.subs.length + 1}`, subject: ask || `${dept} input on: ${t.subject}`, type: d.types[0], dept, owner: who, status: "assigned", ageMin: 0, tatMin: t.tatMin });
+    closeSheet(); render();
+    toast(`${user(who).name} tagged for ${dept}. Their part has its own SLA.`);
+  },
   "do-reassign": (id) => {
     const t = findTicket(id);
     const to = document.querySelector('input[name="newowner"]:checked').value;

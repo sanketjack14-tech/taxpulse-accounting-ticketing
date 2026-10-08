@@ -123,7 +123,7 @@ VIEWS.inbox = () => {
   const verdict = (m) => ({
     ticket: () => `<span class="verdict verdict--ticket">${icon("ticket", "icon--sm")}Ticket ${m.ticket}</span>`,
     skip: () => `<span class="verdict verdict--skip">${icon("skip", "icon--sm")}Skipped</span>`,
-    split: () => `<span class="verdict verdict--split">${icon("split", "icon--sm")}Split into ${m.subs.length}</span>`,
+    split: () => `<span class="verdict verdict--split">${icon("split", "icon--sm")}${m.multiDept ? `${m.subs.length} departments tagged` : `Split into ${m.subs.length}`}</span>`,
     link: () => `<span class="verdict verdict--link">${icon("link", "icon--sm")}Follow-up → ${m.ticket}</span>`,
   }[m.verdict]());
 
@@ -139,7 +139,7 @@ VIEWS.inbox = () => {
     const outcome = {
       ticket: () => `<div class="banner banner--ok"><span class="banner__icon">${icon("check")}</span><div class="banner__body"><span class="banner__title">Created ${sel.ticket}${sel.multi ? " · one ticket for all recipients" : ""}</span><span class="banner__text">${sel.multi ? `Sent to ${sel.to.join(", ")}. One ticket with Neha as owner; Aditya and Priya added as members.` : `Due ${slaInfo(t).sub.replace("Due ", "")} under the ${TIERS[c.tier].label.toLowerCase()} SLA (${t.type}: ${fmtDur(t.tatMin)}).`}</span></div><div class="banner__actions"><a class="btn btn--sm" href="#ticket-${sel.ticket}">Open ticket</a></div></div>`,
       skip: () => `<div class="banner banner--info"><span class="banner__icon">${icon("skip")}</span><div class="banner__body"><span class="banner__title">Not converted to a ticket</span><span class="banner__text">${sel.reason}. Skipped messages stay searchable here for 90 days.</span></div><div class="banner__actions"><button class="btn btn--sm" data-action="override">Create ticket anyway</button></div></div>`,
-      split: () => `<div class="banner banner--pend"><span class="banner__icon">${icon("split")}</span><div class="banner__body"><span class="banner__title">Multi-issue message split into ${sel.subs.length} sub-tickets</span><span class="banner__text">${sel.subs.map((s) => `<a href="#ticket-${s}" class="mono">${s}</a> ${esc(findTicket(s).subject)}`).join("<br>")}</span></div></div>`,
+      split: () => `<div class="banner banner--pend"><span class="banner__icon">${icon("split")}</span><div class="banner__body"><span class="banner__title">${sel.multiDept ? `Needs ${sel.subs.length} departments · nested under ${sel.ticket}` : `Multi-issue message split into ${sel.subs.length} sub-tickets`}</span><span class="banner__text">${sel.subs.map((s) => { const p = findTicket(s); return `<a href="#ticket-${s}" class="mono">${s}</a> ${p.dept ? `<b>${p.dept}</b> → ${user(p.owner).name}: ` : ""}${esc(p.subject)}`; }).join("<br>")}${sel.multiDept ? `<br>Coordinator: ${user(findTicket(sel.ticket).owner).name}, who sends the combined reply.` : ""}</span></div>${sel.multiDept ? `<div class="banner__actions"><a class="btn btn--sm" href="#ticket-${sel.ticket}">Open ticket</a></div>` : ""}</div>`,
       link: () => `<div class="banner banner--info"><span class="banner__icon">${icon("link")}</span><div class="banner__body"><span class="banner__title">Linked as a follow-up to ${sel.ticket}</span><span class="banner__text">${esc(t.subject)} · owner ${user(t.owner).name}. No new ticket created; the owner is notified.</span></div><div class="banner__actions"><a class="btn btn--sm" href="#ticket-${sel.ticket}">Open ticket</a></div></div>`,
     }[sel.verdict]();
     detail = `
@@ -225,7 +225,9 @@ function threadFor(t) {
   const owner = user(t.owner);
   const items = [];
   items.push({ kind: "client", who: src ? src.from : c.name, org: src ? src.org : c.name, when: src ? `Today ${src.time}` : clockAt(-t.ageMin), body: src ? src.body : t.subject + ".", attachments: src && src.attachments });
-  items.push({ kind: "system", body: `Ticket created from ${CHANNEL[t.channel][1]} · classified as ${t.type} · routed to ${owner.name} by mapping (${c.code} → ${t.type} owner)` });
+  items.push({ kind: "system", body: t.multiDept
+    ? `Ticket created from ${CHANNEL[t.channel][1]} · AI found ${t.subs.length} departments (${t.subs.map((s) => s.dept).join(", ")}) · one part each, routed by client mapping · ${owner.name} coordinates`
+    : `Ticket created from ${CHANNEL[t.channel][1]} · classified as ${t.type} · routed to ${owner.name} by mapping (${c.code} → ${t.type} owner)` });
   items.push({ kind: "system", body: `Instant acknowledgement is off in Phase 1. The team replies personally.`, phase: true });
   if (t.followUps) items.push({ kind: "client", who: "Anita D'Souza", org: "Oakridge – HR & Payroll", when: "Today 10:40", body: "Any update on the PF claim? Both employees are asking again." });
   if (t.status !== "received") items.push({ kind: "note", who: owner.name, when: clockAt(-t.ageMin + 40), body: t.type === "GST" ? "Pulled 2B vs books. Differences: Gujarat Chemicals ₹48,200 (filed late), Ravi Packaging ₹12,600 (invoice not uploaded), Om Logistics ₹3,150 (RCM)." : "Checked the client file and prior correspondence. Drafting a reply." });
@@ -253,11 +255,19 @@ VIEWS.ticket = (id) => {
 
   const actions = [];
   if (isOpen(t) && t.status !== "pending") actions.push(`<button class="btn" data-action="reassign" data-val="${t.id}">${icon("swap", "icon--sm")}${isMgr ? "Assign / reassign" : "Reassign"}</button>`);
-  if (isOpen(t) && t.status !== "pending") actions.push(`<button class="btn btn--primary" data-action="resolve" data-val="${t.id}">${icon("check", "icon--sm")}Mark resolved</button>`);
+  if (isOpen(t) && t.status !== "pending" && !t.parentId) actions.push(`<button class="btn" data-action="tag-dept" data-val="${t.id}">${icon("split", "icon--sm")}Tag a department</button>`);
+  const partsOpen = t.subs ? t.subs.filter((x) => !["resolved", "closed"].includes(x.status)).length : 0;
+  if (isOpen(t) && t.status !== "pending") actions.push(t.multiDept && partsOpen
+    ? `<button class="btn btn--primary" disabled data-tip="${partsOpen} department part${partsOpen > 1 ? "s" : ""} still open">${icon("check", "icon--sm")}Mark resolved</button>`
+    : `<button class="btn btn--primary" data-action="resolve" data-val="${t.id}">${icon("check", "icon--sm")}Mark resolved</button>`);
   if (t.status === "resolved" && isMgr) actions.push(`<button class="btn" data-action="sendback" data-val="${t.id}">Send back</button><button class="btn btn--primary" data-action="approve" data-val="${t.id}">${icon("usercheck", "icon--sm")}Approve &amp; close</button>`);
   if (t.status === "closed") actions.push(`<button class="btn" data-action="reopen" data-val="${t.id}">${icon("reopen", "icon--sm")}Reopen</button>`);
 
+  const parent = t.parentId ? findTicket(t.parentId) : null;
   let banner = "";
+  if (parent && parent.multiDept) {
+    banner = `<div class="banner banner--info"><span class="banner__icon">${icon("split")}</span><div class="banner__body"><span class="banner__title">${t.dept} part of a ${parent.subs.length}-department query</span><span class="banner__text">Answer only your department's part. ${user(parent.owner).name} combines all parts into one reply to the client.</span></div><div class="banner__actions"><a class="btn btn--sm" href="#ticket-${parent.id}">Open parent ${parent.id}</a></div></div>`;
+  }
   if (t.status === "pending") {
     const forMe = t.transferTo === u.id;
     banner = `<div class="banner banner--pend"><span class="banner__icon">${icon("swap")}</span><div class="banner__body">
@@ -272,8 +282,22 @@ VIEWS.ticket = (id) => {
     banner = `<div class="banner banner--crit"><span class="banner__icon">${icon("alert")}</span><div class="banner__body"><span class="banner__title">${s.main} · escalated to ${user(t.escalation).name}</span><span class="banner__text">${t.priority === "high" ? `High priority: ${user(c.partner).name} (Engagement Partner) is copied on the escalation.` : "The owner and backup were reminded before the due time."}</span></div></div>`;
   }
 
-  const parent = t.parentId ? findTicket(t.parentId) : null;
-  const subsPanel = t.subs ? panel("Sub-tickets", ticketTable(t.subs.map((x) => ({ ...t, ...x, subs: undefined })), { subs: false }), { flush: true, sub: "AI split one message into separate queries; each has its own owner and SLA" }) : "";
+  let subsPanel = "";
+  if (t.multiDept) {
+    const done = t.subs.filter((x) => ["resolved", "closed"].includes(x.status)).length;
+    subsPanel = panel("Departments on this query", `
+      <div class="row" style="gap:12px;margin-bottom:14px"><span style="flex:1;min-width:120px">${meter(done / t.subs.length * 100)}</span><span class="num" style="font-size:var(--fs-sm)"><b>${done} of ${t.subs.length}</b> parts resolved</span></div>
+      <div class="dept-grid">${t.subs.map((x) => { const part = { ...t, ...x, subs: undefined }; return `<a class="dept-card" href="#ticket-${x.id}">
+        <span class="row row--between" style="flex-wrap:nowrap"><span class="eyebrow">${x.dept}</span>${slaCue(part, { ringOnly: true })}</span>
+        <span>${statusPill(x.status)}</span>
+        <span class="dept-card__q">${esc(x.subject)}</span>
+        ${person(x.owner)}
+        <span class="t-id">${x.id}</span></a>`; }).join("")}</div>
+      <p class="field__hint" style="margin-top:14px">${user(t.owner).name} coordinates. The parent can be resolved once every department has resolved its part, then one combined reply goes to the client.</p>`,
+      { sub: "One query, answered by several departments. Each tagged person owns their part and its SLA.", actions: isOpen(t) ? `<button class="btn btn--sm" data-action="tag-dept" data-val="${t.id}">${icon("plus", "icon--sm")}Tag another department</button>` : "" });
+  } else if (t.subs) {
+    subsPanel = panel("Sub-tickets", ticketTable(t.subs.map((x) => ({ ...t, ...x, subs: undefined })), { subs: false }), { flush: true, sub: "AI split one message into separate queries; each has its own owner and SLA" });
+  }
 
   const pct = Math.round(Math.min(t.ageMin / t.tatMin, 9.99) * 100);
   const ladderStep = s.over ? (t.priority === "high" || t.ageMin > t.tatMin * 2 ? 3 : 2) : 1;
@@ -281,7 +305,9 @@ VIEWS.ticket = (id) => {
     ...(t.status === "pending" ? [{ dot: "pend", text: `<b>${user(t.transferBy).name}</b> requested transfer to <b>${user(t.transferTo).name}</b> — “${esc(t.transferReason)}”`, meta: `${clockAt(-80)} · awaiting acceptance` }] : []),
     ...(s.over ? [{ dot: "crit", text: `Escalated to <b>${user(t.escalation).name}</b> (SLA breached)`, meta: clockAt(-t.ageMin + t.tatMin) + " · auto" }] : []),
     { dot: "", text: `Reminder sent to <b>${user(t.owner).name}</b> at 75% of TAT`, meta: clockAt(-t.ageMin + t.tatMin * 0.75) + " · auto" },
-    { dot: "brand", text: `Assigned to <b>${user(t.owner).name}</b> via mapping (${c.code} → ${t.type}). Backup: ${user(t.backup).name}. Escalation: ${user(t.escalation).name}`, meta: clockAt(-t.ageMin + 1) + " · auto" },
+    t.multiDept
+      ? { dot: "brand", text: `Split across ${t.subs.length} departments. <b>${user(t.owner).name}</b> (client owner for ${c.code}) coordinates; tagged: ${t.subs.map((x) => `${user(x.owner).name} (${x.dept})`).join(", ")}`, meta: clockAt(-t.ageMin + 1) + " · auto" }
+      : { dot: "brand", text: `Assigned to <b>${user(t.owner).name}</b> via mapping (${c.code} → ${t.type}). Backup: ${user(t.backup).name}. Escalation: ${user(t.escalation).name}`, meta: clockAt(-t.ageMin + 1) + " · auto" },
     { dot: "", text: `Ticket created from ${CHANNEL[t.channel][1]} (${esc(t.source)})`, meta: clockAt(-t.ageMin) + " · auto" },
   ];
   const kb = KB.filter((k) => k.tags.some((tag) => t.type.startsWith(tag) || tag.startsWith(t.type.split(" ")[0]))).slice(0, 2);
@@ -315,10 +341,11 @@ VIEWS.ticket = (id) => {
           <p class="eyebrow" style="margin:18px 0 4px">Escalation matrix</p>
           <div class="ladder">${[["Accountant", t.owner, "At 75% of TAT"], ["Manager", t.escalation, "At due time"], ["Engagement Partner", c.partner, "Critical or 2× TAT"]].map(([r, uid, when], i) => `<div class="ladder__step ${i + 1 < ladderStep ? "is-done" : ""} ${i + 1 === ladderStep && s.over ? "is-now" : ""}"><span class="ladder__n">${i + 1}</span><div style="min-width:0"><div style="font-weight:500">${user(uid).name}</div><div class="muted" style="font-size:var(--fs-xs)">${r} · ${when}</div></div></div>`).join("")}</div>`)}
         ${panel("People", `<dl class="dl">
-            <dt>Owner</dt><dd>${person(t.owner)}</dd>
+            <dt>${t.multiDept ? "Coordinator" : "Owner"}</dt><dd>${person(t.owner)}</dd>
             <dt>Backup</dt><dd>${person(t.backup)}</dd>
             <dt>Escalation</dt><dd>${person(t.escalation)}</dd>
             <dt>Partner</dt><dd>${person(c.partner)}</dd>
+            ${t.multiDept ? t.subs.map((x, i) => `<dt>${i ? "" : "Tagged"}</dt><dd>${person(x.owner, x.dept)}</dd>`).join("") : ""}
             ${(t.members || []).length ? `<dt>Members</dt><dd><span class="av-stack">${t.members.map((m) => av(m, "sm")).join("")}</span> <span class="muted" style="font-size:var(--fs-xs)">from email To/Cc</span></dd>` : ""}
           </dl>`)}
         ${panel("Client mapping", `<dl class="dl">

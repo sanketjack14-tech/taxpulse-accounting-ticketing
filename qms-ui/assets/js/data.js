@@ -58,7 +58,22 @@ const SLA_MATRIX = {
 
 /* status: received | assigned | progress | pending | resolved | closed | reopened
    ageMin = minutes since received; tatMin = turnaround in minutes */
+const DEPARTMENTS = [
+  { name: "GST & Accounting", head: "u2", types: ["GST", "Accounting", "Payments & Challans"] },
+  { name: "Direct Tax", head: "u3", types: ["Income Tax", "TDS"] },
+  { name: "ROC & Secretarial", head: "u3", types: ["ROC / MCA"] },
+  { name: "Payroll & PF", head: "u2", types: ["PF / ESI"] },
+  { name: "Audit & Assurance", head: "u3", types: ["Audit"] },
+];
+
 const TICKETS = [
+  /* Multi-department (nested) query: one parent, one part per department, each with its own tagged owner and SLA */
+  { id: "TKT-1049", subject: "Merger of Vertex Roads into Vertex Infra — GST, tax and ROC steps", client: "c6", type: "Multi-department", channel: "mail", source: "cfo@vertexinfra.com", owner: "u7", backup: "u6", escalation: "u3", status: "progress", priority: "high", ageMin: 150, tatMin: 480, members: [], parent: true, multiDept: true,
+    subs: [
+      { id: "TKT-1049.1", subject: "Transfer GST registration and unutilised ITC (Form ITC-02)", type: "GST", dept: "GST & Accounting", owner: "u8", status: "progress", ageMin: 150, tatMin: 240 },
+      { id: "TKT-1049.2", subject: "Tax neutrality of the amalgamation — sections 47(vi) and 72A", type: "Income Tax", dept: "Direct Tax", owner: "u7", status: "resolved", ageMin: 150, tatMin: 360 },
+      { id: "TKT-1049.3", subject: "Scheme of amalgamation — NCLT petition and Form CAA filings", type: "ROC / MCA", dept: "ROC & Secretarial", owner: "u9", status: "assigned", ageMin: 150, tatMin: 480 },
+    ] },
   { id: "TKT-1048", subject: "GSTR-3B Sept: ITC lower than GSTR-2B for 3 vendors", client: "c1", type: "GST", channel: "wa", source: "Shreeji Group – Accounts", owner: "u4", backup: "u5", escalation: "u2", status: "progress", priority: "high", ageMin: 205, tatMin: 240, members: [] },
   { id: "TKT-1047", subject: "TDS on rent paid to director — 194-I or 194-IB?", client: "c7", type: "TDS", channel: "mail", source: "cfo@oakridgesoftware.in", owner: "u4", backup: "u5", escalation: "u2", status: "pending", transferTo: "u8", transferBy: "u4", transferReason: "Vikram handled Oakridge's lease agreement review in August.", priority: "med", ageMin: 95, tatMin: 480, members: [] },
   { id: "TKT-1046", subject: "Advance tax — 3rd instalment with LTCG on property sale", client: "c5", type: "Income Tax", channel: "phone", source: "Logged by Farhan Shaikh", owner: "u6", backup: "u7", escalation: "u3", status: "assigned", priority: "med", ageMin: 60, tatMin: 1440, members: [] },
@@ -84,6 +99,7 @@ const TICKETS = [
 
 /* Intake stream (#1–#5, #7, #15) */
 const MESSAGES = [
+  { id: "m11", channel: "mail", via: "queries@mehtaassociates.in", from: "Ramesh Iyer (CFO)", org: "Vertex Infra Projects Ltd", subject: "Merger of Vertex Roads Pvt Ltd into Vertex Infra", time: "09:00", body: "Dear Sir,\nThe board has approved merging Vertex Roads into Vertex Infra with effect from 1 April 2026. Please advise on:\n1) Moving the GST registration and unused ITC of Vertex Roads.\n2) Whether the merger is tax-neutral and if losses carry forward.\n3) The NCLT scheme and ROC filings, with timelines.\n\nRegards,\nRamesh", verdict: "split", multiDept: true, ticket: "TKT-1049", subs: ["TKT-1049.1", "TKT-1049.2", "TKT-1049.3"], type: "GST + Income Tax + ROC", client: "c6", conf: 89 },
   { id: "m1", channel: "wa", via: "+91 98200 41110", from: "Mahesh Shah", org: "Shreeji Group – Accounts", time: "08:05", body: "Hi team, ITC for Sept 3B is coming lower than 2B for Gujarat Chemicals, Ravi Packaging and Om Logistics. Please check before we file. Due date is 20th.", verdict: "ticket", ticket: "TKT-1048", type: "GST", client: "c1", conf: 96 },
   { id: "m2", channel: "wa", via: "+91 98200 41110", from: "Mahesh Shah", org: "Shreeji Group – Accounts", time: "08:02", body: "Good morning all. Happy Navratri to the whole team!", verdict: "skip", reason: "General greeting — no query detected", conf: 99 },
   { id: "m3", channel: "mail", via: "queries@mehtaassociates.in", from: "Sanjay Kulkarni (CFO)", org: "Oakridge Software Pvt Ltd", subject: "TDS on rent to director", time: "09:55", body: "Dear Sir,\nWe are paying monthly rent of ₹1,20,000 to our director Mr. Raghav for the Baner office. Should TDS be deducted u/s 194-I or 194-IB? Also confirm the rate.\n\nRegards,\nSanjay", verdict: "ticket", ticket: "TKT-1047", type: "TDS", client: "c7", conf: 93 },

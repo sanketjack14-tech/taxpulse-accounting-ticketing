@@ -48,7 +48,8 @@ qms-ui/
 
 1. **Transfer and acceptance (#13, #14):** as *Team member*, open `#ticket-TKT-1036` and click **Accept ownership**. As *Manager*, open any open ticket and click **Assign / reassign**.
 2. **Maker–checker closure (#12):** as *Team member*, click **Mark resolved** on a ticket. As *Manager*, open `#ticket-TKT-1041` and click **Approve & close**. On a closed ticket, click **Reopen**.
-3. **AI intake (#5, #7, #15):** as *System admin (IT)*, open Intake and compare a skipped greeting, a split multi-issue message, a linked follow-up and one ticket created from a multi-recipient email.
+3. **Multi-department query:** as *Manager*, open `#ticket-TKT-1049`. Three departments are tagged; the parent can be resolved only when all parts are. Use **Tag a department** on any open ticket to nest it.
+4. **AI intake (#5, #7, #15):** as *System admin (IT)*, open Intake and compare a skipped greeting, a split multi-issue message, a linked follow-up and one ticket created from a multi-recipient email.
 
 ## Scope traceability
 
@@ -61,6 +62,7 @@ qms-ui/
 | 5 | Auto ticket creation, owner/backup/escalation, skip non-queries | Intake verdicts, ticket People panel |
 | 6 | Instant acknowledgement (built, off) | Channels → disabled toggle and template; system note in thread |
 | 7 | AI classification, routing, sub-tickets, follow-ups | Intake AI card, sub-tickets panel, "follow-ups linked" |
+| 7a | Multi-department queries (nested) | `#ticket-TKT-1049`: one parent with a part per department, each with its own tagged owner and SLA; "Tag a department" on any open ticket |
 | 8 | Response-by, reminders, closing | Ticket SLA panel |
 | 9 | Human-only responses | Composer footer note; no auto-replies |
 | 10 | Status updates on same channel | Ticket status stepper |

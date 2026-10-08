@@ -62,7 +62,7 @@ function scopedTickets() {
   const u = me();
   const top = TICKETS;
   if (state.role === "member") return top.filter((t) => t.owner === u.id || t.transferTo === u.id || (t.subs || []).some((s) => s.owner === u.id) || (t.members || []).includes(u.id));
-  if (state.role === "manager") return top.filter((t) => t.escalation === u.id);
+  if (state.role === "manager") return top.filter((t) => t.escalation === u.id || (t.subs || []).some((s) => user(s.owner).team === u.team));
   return top;
 }
 
@@ -182,21 +182,27 @@ function periodPicker() {
     <label class="period__date"><span class="sr-only">To</span><input type="date" class="input" id="period-to" value="${state.customTo}" max="2026-10-07" data-change="customTo"></label>` : ""}</div>`;
 }
 
+/* People tagged on a multi-department query: one per department part */
+function taggedPeople(t) {
+  const ids = [...new Set(t.subs.map((s) => s.owner))];
+  return `<span class="person"><span class="av-stack">${ids.map((id) => av(id, "sm")).join("")}</span><span style="min-width:0"><span class="person__name">${ids.length} people tagged</span><span class="person__meta">Coordinator: ${user(t.owner).name.split(" ")[0]}</span></span></span>`;
+}
+
 /* ---------- ticket table (shared by dashboard, tickets, client detail) ---------- */
 function ticketRows(list, { showOwner = true, subs = true } = {}) {
   return list.map((t) => {
     const main = `<tr class="is-link" data-href="#ticket-${t.id}">
       <td>${slaCue(t)}</td>
-      <td><div class="t-title">${esc(t.subject)}<small><span class="mono">${t.id}</span> · ${t.type}${t.followUps ? ` · ${t.followUps} follow-ups linked` : ""}${t.reopens ? ` · reopened ${t.reopens}×` : ""}</small></div></td>
+      <td><div class="t-title">${esc(t.subject)}<small><span class="mono">${t.id}</span> · ${t.multiDept ? `${t.subs.length} departments` : t.type}${t.followUps ? ` · ${t.followUps} follow-ups linked` : ""}${t.reopens ? ` · reopened ${t.reopens}×` : ""}</small></div></td>
       <td>${clientCell(t.client)}</td>
       <td>${channelTag(t.channel)}</td>
-      ${showOwner ? `<td>${person(t.owner, t.status === "pending" ? `→ ${user(t.transferTo).name.split(" ")[0]} (pending)` : `Backup: ${user(t.backup).name.split(" ")[0]}`)}</td>` : ""}
+      ${showOwner ? `<td>${t.multiDept ? taggedPeople(t) : person(t.owner, t.status === "pending" ? `→ ${user(t.transferTo).name.split(" ")[0]} (pending)` : `Backup: ${user(t.backup).name.split(" ")[0]}`)}</td>` : ""}
       <td>${statusPill(t.status)}</td>
       <td>${prio(t.priority)}</td>
     </tr>`;
     const subRows = subs && t.subs ? t.subs.map((s) => `<tr class="is-link sub-row" data-href="#ticket-${s.id}">
       <td>${slaCue({ ...t, ...s })}</td>
-      <td><div class="t-title">${esc(s.subject)}<small><span class="mono">${s.id}</span> · ${s.type} · sub-ticket</small></div></td>
+      <td><div class="t-title">${esc(s.subject)}<small><span class="mono">${s.id}</span> · ${s.dept ? `<span class="tag">${s.dept}</span>` : `${s.type} · sub-ticket`}</small></div></td>
       <td></td><td></td>
       ${showOwner ? `<td>${person(s.owner)}</td>` : ""}
       <td>${statusPill(s.status)}</td><td></td></tr>`).join("") : "";
