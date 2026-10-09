@@ -81,7 +81,7 @@ qms-ui/
 | 23 | Analytics | Reports → Analytics (accountant, client, engagement, provider) |
 | 24 | Knowledge base | Knowledge base page; "Add to knowledge base" on resolve; similar queries on ticket |
 | 25 | Task master | Task templates |
-| 26 | Onboarding tasks | Add client drawer, Tasks → Onboarding |
+| 26 | Onboarding tasks | Clients → Add client: standard-task checklist per client (pre-ticked from engagements, owner per task), Tasks → Onboarding |
 | 27 | Recurring tasks | Tasks → Recurring, calendar, "Generate November cycle" |
 | 28 | Client-level customisation | Client detail → Task plan toggles, Modify, Add |
 | 29 | User and client access | Users & access, client Deactivate |

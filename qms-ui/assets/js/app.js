@@ -143,6 +143,52 @@ function tagDeptDialog(id) {
     <div class="field"><label class="field__label" for="td-ask">What should this department answer?</label><textarea class="textarea" id="td-ask" placeholder="e.g. Confirm TDS treatment on the vendor payments mentioned in point 2"></textarea></div>`,
     `<button class="btn" data-action="close-sheet">Cancel</button><button class="btn btn--primary" data-action="do-tag-dept" data-val="${t.id}">Tag department</button>`));
 }
+/* Add client with a checklist of standard tasks (#25, #26, #28) */
+const FIRST_DUE = { tt1: "11 Nov 2026", tt2: "20 Nov 2026", tt3: "31 Dec 2026", tt4: "7 Nov 2026", tt5: "31 Jan 2027", tt6: "15 Dec 2026", tt7: "31 Jul 2027", tt8: "30 days after AGM", tt9: "60 days after AGM", tt10: "15 days before DSC expiry", tt11: "15 Nov 2026", tt12: "12 Oct 2026", tt13: "16 Oct 2026", tt14: "14 Oct 2026" };
+const ROLE_DEFAULT = { "Company Secretary": "u9", "PF Consultant": "u10", "Senior accountant": "u7" };
+function newClientDialog() {
+  const engs = ["GST", "TDS", "Income Tax", "ROC", "PF/ESI", "Audit", "Accounting"];
+  const on = new Set(["GST", "TDS"]);
+  const members = USERS.filter((u) => u.role === "member" && u.active);
+  const opts = (sel) => members.map((u) => `<option value="${u.id}" ${u.id === sel ? "selected" : ""}>${esc(u.name)}</option>`).join("");
+  const group = (eng) => {
+    const list = TASK_TEMPLATES.filter((t) => t.engagement === eng);
+    const always = eng === "All";
+    return `<div class="onb-group" data-group="${eng}" ${always || on.has(eng) ? "" : "hidden"}>
+      <div class="onb-group__head"><span class="onb-group__title">${always ? "Every new client" : eng}</span>${list.length ? `<span class="row" style="gap:4px"><button type="button" class="btn btn--sm btn--ghost" data-action="onb-group" data-val="${eng}|1">Select all</button><button type="button" class="btn btn--sm btn--ghost" data-action="onb-group" data-val="${eng}|0">Clear</button></span>` : ""}</div>
+      ${list.length ? list.map((t) => `<div class="onb-task">
+        <input type="checkbox" class="nc-task" id="nc-t-${t.id}" data-eng="${eng}" data-kind="${t.kind}" checked>
+        <label for="nc-t-${t.id}" class="onb-task__main"><span class="onb-task__name">${esc(t.name)}</span><span class="onb-task__meta">${t.kind === "Onboarding" ? '<span class="pill pill--info pill--plain">One-time</span>' : `<span class="pill pill--brand pill--plain">${t.freq}</span>`} ${esc(t.rule)} · first due <b>${FIRST_DUE[t.id]}</b></span></label>
+        <label class="sr-only" for="nc-o-${t.id}">Owner for ${esc(t.name)}</label><select class="select onb-task__owner" id="nc-o-${t.id}">${opts(ROLE_DEFAULT[t.role] || "u4")}</select>
+      </div>`).join("") : `<p class="field__hint" style="padding:8px 0">No standard tasks for ${eng} yet. Add them in Task templates.</p>`}
+    </div>`;
+  };
+  openSheet(sheet("drawer drawer--wide", "Onboard a client", "Pick the standard tasks for this client. Recurring tasks are then generated on schedule, with the same reminders and escalation as tickets.", `
+    <section class="stack"><p class="eyebrow">1 · Client details</p><div class="form-grid">
+      ${f("nc-name", "Client name", "", true)}${f("nc-code", "Client code", "ACM-080")}${f("nc-group", "Group", "—")}
+      ${f("nc-tier", "SLA tier", '<option>Key</option><option selected>Retainer</option><option>Standard</option>', false, "select")}
+      ${f("nc-kind", "Constitution", "<option>Company</option><option>LLP</option><option>Partnership</option><option>Proprietorship</option><option>Individual</option><option>Trust</option>", false, "select")}
+    </div></section>
+    <section class="stack"><p class="eyebrow">2 · Responsibility</p><div class="form-grid">
+      ${f("nc-partner", "Engagement partner", USERS.filter((u) => u.role === "leadership").map((u) => `<option>${u.name}</option>`).join(""), false, "select")}
+      ${f("nc-manager", "Manager", USERS.filter((u) => u.role === "manager").map((u) => `<option>${u.name}</option>`).join(""), false, "select")}
+      ${f("nc-owner", "Owner", members.map((u) => `<option>${u.name}</option>`).join(""), false, "select")}
+      ${f("nc-backup", "Backup", members.map((u, i) => `<option ${i === 1 ? "selected" : ""}>${u.name}</option>`).join(""), false, "select")}
+    </div></section>
+    <section class="stack"><p class="eyebrow">3 · Engagements</p><div class="row">${engs.map((e, i) => `<label class="chip-check"><input type="checkbox" class="nc-eng" id="nc-e${i}" value="${e}" ${on.has(e) ? "checked" : ""}><span>${e}</span></label>`).join("")}</div>
+      <p class="field__hint">Ticking an engagement adds its standard tasks below.</p></section>
+    <section class="stack"><div class="row row--between"><p class="eyebrow">4 · Standard tasks</p><span class="onb-summary num" id="onb-summary"></span></div>
+      <div class="onb-list">${["All", ...engs].map(group).join("")}</div></section>`,
+    `<button class="btn" data-action="close-sheet">Cancel</button><button class="btn btn--primary" data-action="do-add-client">Add client &amp; schedule tasks</button>`));
+  updateOnboardSummary();
+}
+function updateOnboardSummary() {
+  const el = document.getElementById("onb-summary");
+  if (!el) return;
+  const picked = [...document.querySelectorAll(".nc-task:checked")].filter((c) => !c.closest("[hidden]"));
+  const onb = picked.filter((c) => c.dataset.kind === "Onboarding").length;
+  el.innerHTML = `<b>${picked.length}</b> selected · ${onb} one-time · ${picked.length - onb} recurring`;
+}
 function logCallDialog() {
   openSheet(sheet("drawer", "Log a phone instruction", "Creates a ticket with the same SLA and routing as WhatsApp and email.", `
     <div class="form-grid">
@@ -236,7 +282,16 @@ const actions = {
   "toggle-tpl": () => toast("Client task plan updated."),
   "toggle-user": (id) => { const u = user(id); u.active = !u.active; toast(`${u.name} ${u.active ? "activated" : "deactivated"}.`); },
   "copy-kb": (id) => { const k = byId(KB, id); const done = () => toast("Answer copied."); try { navigator.clipboard.writeText(k.a).then(done, done); } catch (e) { done(); } },
-  "new-client": () => simpleDrawer("Add client", "Onboarding tasks are created automatically and assigned to the mapped owner.", f("nc-name", "Client name", "", true) + f("nc-code", "Client code", "ACM-080") + f("nc-group", "Group", "—") + f("nc-tier", "SLA tier", '<option>Key</option><option selected>Retainer</option><option>Standard</option>', false, "select") + f("nc-kind", "Constitution", "<option>Company</option><option>LLP</option><option>Partnership</option><option>Individual</option><option>Trust</option>", false, "select") + f("nc-partner", "Engagement partner", USERS.filter((u) => u.role === "leadership").map((u) => `<option>${u.name}</option>`).join(""), false, "select") + f("nc-manager", "Manager", USERS.filter((u) => u.role === "manager").map((u) => `<option>${u.name}</option>`).join(""), false, "select") + f("nc-owner", "Owner", USERS.filter((u) => u.role === "member").map((u) => `<option>${u.name}</option>`).join(""), false, "select") + f("nc-backup", "Backup", USERS.filter((u) => u.role === "member").map((u) => `<option>${u.name}</option>`).join(""), false, "select") + `<div class="field span-2"><span class="field__label">Engagement types</span><div class="row">${["GST", "TDS", "Income Tax", "ROC", "Audit", "PF/ESI", "Accounting"].map((e, i) => `<label class="check"><input type="checkbox" id="nc-e${i}" ${i < 2 ? "checked" : ""}>${e}</label>`).join("")}</div></div>`, ["Add client & create onboarding tasks", "Client added. 5 onboarding tasks created."]),
+  "new-client": () => newClientDialog(),
+  "onb-group": (v) => { const [eng, on] = v.split("|"); document.querySelectorAll(`.nc-task[data-eng="${eng}"]`).forEach((c) => { c.checked = on === "1"; }); updateOnboardSummary(); },
+  "do-add-client": () => {
+    const name = document.getElementById("nc-name");
+    if (!name.value.trim()) { name.focus(); name.setAttribute("aria-invalid", "true"); toast("Enter the client name to continue."); return; }
+    const picked = [...document.querySelectorAll(".nc-task:checked")].filter((c) => !c.closest("[hidden]"));
+    const onb = picked.filter((c) => c.dataset.kind === "Onboarding").length;
+    closeSheet();
+    toast(`${esc(name.value.trim())} added. ${onb} onboarding and ${picked.length - onb} recurring tasks scheduled.`);
+  },
   "edit-client": () => toast("Mapping editor opens here."),
   "new-user": () => simpleDrawer("Invite user", "They receive an email to set a password.", f("nu-name", "Full name", "", true) + f("nu-email", "Work email", "", true) + f("nu-role", "Role", "<option>Team member</option><option>Manager</option><option>Leadership</option><option>Platform admin</option><option>System admin</option>", false, "select") + f("nu-type", "Type", "<option>Internal</option><option>External</option>", false, "select") + f("nu-team", "Team", "<option>GST &amp; Accounting</option><option>Direct Tax &amp; ROC</option><option>External</option>", true, "select"), ["Send invite", "Invite sent."]),
   "new-template": () => simpleDrawer("New task template", "Applies to every client with this engagement type.", f("ntp-name", "Task name", "", true) + f("ntp-eng", "Engagement type", "<option>GST</option><option>TDS</option><option>Income Tax</option><option>ROC</option><option>PF/ESI</option><option>All</option>", false, "select") + f("ntp-kind", "Type", "<option>Recurring</option><option>Onboarding</option>", false, "select") + f("ntp-freq", "Frequency", "<option>Monthly</option><option>Quarterly</option><option>Annual</option><option>Once</option>", false, "select") + f("ntp-rule", "Due-date rule", "20th of following month") + f("ntp-role", "Default owner role", "<option>Client owner</option><option>GST owner</option><option>TDS owner</option><option>Company Secretary</option>", false, "select") + f("ntp-sla", "Reminder", "2 days before due"), ["Save template", "Template saved."]),
@@ -268,6 +323,13 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "/" && !e.target.matches("input, textarea, select")) { const s = document.getElementById("global-search"); if (s) { e.preventDefault(); s.focus(); } }
 });
 document.addEventListener("change", (e) => {
+  if (e.target.matches(".nc-eng")) {
+    const g = document.querySelector(`.onb-group[data-group="${e.target.value}"]`);
+    if (g) { g.hidden = !e.target.checked; g.querySelectorAll(".nc-task").forEach((c) => { c.checked = e.target.checked; }); }
+    updateOnboardSummary();
+    return;
+  }
+  if (e.target.matches(".nc-task")) { updateOnboardSummary(); return; }
   const k = e.target.dataset.change;
   if (!k) return;
   state[k] = e.target.value;

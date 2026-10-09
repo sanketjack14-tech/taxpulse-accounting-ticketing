@@ -453,6 +453,27 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .scrim { position: fixed; inset: 0; background: var(--scrim); z-index: 60; display: flex; justify-content: flex-end; animation: fade .15s ease; }
 .scrim--center { justify-content: center; align-items: center; padding: 16px; }
 .drawer { width: min(520px, 100%); height: 100%; background: var(--surface); display: flex; flex-direction: column; box-shadow: var(--shadow-pop); animation: slide .2s ease; }
+.drawer--wide { width: min(760px, 100%); }
+.chip-check { position: relative; display: inline-flex; cursor: pointer; }
+.chip-check input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.chip-check span { padding: 6px 12px; border-radius: 99px; border: 1px solid var(--line-strong); font-size: var(--fs-sm); color: var(--ink-2); background: var(--surface); }
+.chip-check input:checked + span { background: var(--brand-soft); border-color: var(--brand); color: var(--brand); font-weight: 500; }
+.chip-check input:focus-visible + span { outline: 2px solid var(--brand); outline-offset: 2px; }
+.onb-list { display: grid; gap: 14px; }
+.onb-group { border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; }
+.onb-group__head { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 8px 8px 14px; background: var(--surface-2); border-bottom: 1px solid var(--line); }
+.onb-group__title { font-weight: 600; font-size: var(--fs-sm); }
+.onb-group > .field__hint { padding: 10px 14px !important; }
+.onb-task { display: grid; grid-template-columns: auto minmax(0, 1fr) 170px; gap: 12px; align-items: center; padding: 10px 14px; border-top: 1px solid var(--line); }
+.onb-task:first-of-type { border-top: 0; }
+.onb-task input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--brand); margin: 0; }
+.onb-task__main { display: grid; gap: 4px; cursor: pointer; min-width: 0; }
+.onb-task__name { font-weight: 500; }
+.onb-task__meta { font-size: var(--fs-xs); color: var(--ink-3); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.onb-task__owner { padding: 6px 8px; font-size: var(--fs-sm); }
+.onb-task:has(input:not(:checked)) .onb-task__main, .onb-task:has(input:not(:checked)) .onb-task__owner { opacity: .5; }
+.onb-summary { font-size: var(--fs-sm); color: var(--ink-2); }
+.input[aria-invalid="true"] { border-color: var(--crit); }
 .modal { width: min(560px, 100%); max-height: 90vh; background: var(--surface); border-radius: var(--r-lg); display: flex; flex-direction: column; box-shadow: var(--shadow-pop); animation: pop .18s ease; }
 .sheet__head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: calc(20px + env(safe-area-inset-top, 0px)) 22px 14px; border-bottom: 1px solid var(--line); }
 .modal .sheet__head { padding-top: 20px; }
@@ -554,6 +575,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
   .kpi:last-child { grid-column: 1 / -1; }
   .page-head__title { font-size: var(--fs-2xl); }
   .form-grid { grid-template-columns: minmax(0, 1fr); }
+  .onb-task { grid-template-columns: auto minmax(0, 1fr); }
+  .onb-task__owner { grid-column: 2; }
   .route { grid-template-columns: minmax(0, 1fr); }
   .hbar { grid-template-columns: 96px minmax(0, 1fr) 44px; }
   .dl { grid-template-columns: 110px minmax(0, 1fr); }
