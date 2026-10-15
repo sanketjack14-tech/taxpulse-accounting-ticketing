@@ -18,7 +18,8 @@ const state = {
   customFrom: "2026-09-21",
   customTo: "2026-10-07",
   dashOwner: "all",
-  dashClient: "all",
+  dashClient: "all",        // "all", a client id, or "g:<group name>"
+  collapsedGroups: {},
   ticketTab: "open",
   ticketChannel: "all",
   ticketType: "all",
@@ -133,9 +134,31 @@ function person(id, meta) {
   const u = user(id);
   return `<span class="person">${av(id, "sm")}<span style="min-width:0"><span class="person__name">${esc(u.name)}</span>${meta !== undefined ? `<span class="person__meta">${meta}</span>` : ""}</span>${u.type === "external" ? `<span class="tag" data-tip="External member — notified by email">${icon("external", "icon--sm")}Ext</span>` : ""}</span>`;
 }
+/* ---------- client groups (parent group → companies) ---------- */
+const hasGroup = (c) => c.group && c.group !== "—";
+function clientGroups() {
+  const map = new Map();
+  CLIENTS.filter(hasGroup).forEach((c) => { if (!map.has(c.group)) map.set(c.group, []); map.get(c.group).push(c); });
+  return { groups: [...map.entries()].map(([name, list]) => ({ name, clients: list })), standalone: CLIENTS.filter((c) => !hasGroup(c)) };
+}
+/* Client ids covered by a filter value: "all", a client id, or "g:<group>" */
+function clientIdsFor(v) {
+  if (v === "all") return null;
+  if (v.startsWith("g:")) return CLIENTS.filter((c) => c.group === v.slice(2)).map((c) => c.id);
+  return [v];
+}
+function clientSelect(id, value, action) {
+  const { groups, standalone } = clientGroups();
+  const o = (v, l) => `<option value="${esc(v)}" ${v === value ? "selected" : ""}>${esc(l)}</option>`;
+  return `<select class="select" id="${id}" data-change="${action}" style="width:auto">${o("all", "All clients")}
+    ${groups.map((g) => `<optgroup label="${esc(g.name)}">${o("g:" + g.name, `${g.name} — all ${g.clients.length} ${g.clients.length > 1 ? "companies" : "company"}`)}${g.clients.map((c) => o(c.id, `   └ ${c.name}`)).join("")}</optgroup>`).join("")}
+    <optgroup label="Standalone clients">${standalone.map((c) => o(c.id, c.name)).join("")}</optgroup></select>`;
+}
+const clientName = (cid) => client(cid).name;
+
 function clientCell(cid) {
   const c = client(cid);
-  return `<div style="display:grid;gap:3px"><span style="font-weight:500;white-space:nowrap">${esc(c.name)}</span><span class="row" style="gap:6px"><span class="t-id">${c.code}</span>${tierTag(c.tier)}</span></div>`;
+  return `<div style="display:grid;gap:3px">${hasGroup(c) ? `<span class="group-label">${icon("building", "icon--xs")}${esc(c.group)}</span>` : ""}<span style="font-weight:500;white-space:nowrap">${esc(c.name)}</span><span class="row" style="gap:6px"><span class="t-id">${c.code}</span>${tierTag(c.tier)}</span></div>`;
 }
 function meter(pct, cls = "") { return `<div class="meter ${cls}"><i style="width:${Math.max(3, Math.min(100, pct))}%"></i></div>`; }
 function panel(title, body, opts = {}) {

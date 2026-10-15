@@ -72,6 +72,7 @@ qms-ui/
 | 14 | Manager assign, acceptance, reminder, escalation, history | Pending banner, Assignment history, SLA → Unaccepted transfers |
 | 15 | Many recipients → one ticket | Intake message m10 → TKT-1034 members |
 | 16 | Client-wise SLA | SLA matrix, client detail SLA panel, tier tags |
+| 17a | Client groups | Groups (e.g. Shreeji Group → Polymers, Logistics, Exports) shown on Clients, the dashboard client filter, every client cell and Analytics → Client |
 | 17 | Master data mapping | Client detail, ticket Client mapping panel |
 | 18 | Reminders and visual cues | **SLA ring** (see below), legend on Tickets |
 | 19 | Escalation matrix | Ticket SLA panel ladder, SLA & escalation page |

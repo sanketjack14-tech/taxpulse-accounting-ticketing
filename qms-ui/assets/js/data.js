@@ -25,6 +25,7 @@ const USERS = [
 const CLIENTS = [
   { id: "c1", code: "SHR-001", name: "Shreeji Polymers Pvt Ltd", group: "Shreeji Group", kind: "Company", tier: "key", partner: "u1", manager: "u2", owner: "u4", backup: "u5", engagements: ["GST", "TDS", "ROC", "Statutory Audit"], providers: { CS: "u9", GST: "u4", "Income Tax": "u7", Auditor: "u7" } },
   { id: "c2", code: "SHR-002", name: "Shreeji Logistics LLP", group: "Shreeji Group", kind: "LLP", tier: "key", partner: "u1", manager: "u2", owner: "u8", backup: "u4", engagements: ["GST", "TDS", "Accounting"], providers: { GST: "u8", "Income Tax": "u6" } },
+  { id: "c11", code: "SHR-003", name: "Shreeji Exports Pvt Ltd", group: "Shreeji Group", kind: "Company", tier: "key", partner: "u1", manager: "u2", owner: "u5", backup: "u4", engagements: ["GST", "Accounting"], providers: { GST: "u5" } },
   { id: "c3", code: "KAP-014", name: "Kapoor Textiles", group: "—", kind: "Partnership", tier: "retainer", partner: "u1", manager: "u2", owner: "u5", backup: "u8", engagements: ["GST", "Accounting"], providers: { GST: "u5" } },
   { id: "c4", code: "NIL-022", name: "Nilkanth Foods Pvt Ltd", group: "—", kind: "Company", tier: "retainer", partner: "u1", manager: "u3", owner: "u6", backup: "u7", engagements: ["ROC", "Income Tax", "Accounting"], providers: { CS: "u9", "Income Tax": "u6" } },
   { id: "c5", code: "MEH-031", name: "Dr. Anand Mehra", group: "Mehra Family", kind: "Individual", tier: "standard", partner: "u1", manager: "u3", owner: "u6", backup: "u7", engagements: ["Income Tax"], providers: { "Income Tax": "u6" } },

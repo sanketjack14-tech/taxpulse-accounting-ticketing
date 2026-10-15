@@ -12,7 +12,8 @@ VIEWS.dashboard = () => {
   const u = me();
   let list = scopedTickets();
   if (state.dashOwner !== "all") list = list.filter((t) => t.owner === state.dashOwner);
-  if (state.dashClient !== "all") list = list.filter((t) => t.client === state.dashClient);
+  const clientIds = clientIdsFor(state.dashClient);
+  if (clientIds) list = list.filter((t) => clientIds.includes(t.client));
   const open = list.filter(isOpen);
   const overdue = open.filter(isOverdue);
   const pending = list.filter((t) => t.status === "pending");
@@ -25,7 +26,6 @@ VIEWS.dashboard = () => {
 
   const members = state.role === "member" ? [] : USERS.filter((x) => x.role === "member" && x.active && (state.role === "leadership" || x.team === u.team || TICKETS.some((t) => t.owner === x.id && t.escalation === u.id)));
   const ownerOpts = [["all", state.role === "member" ? "Me" : "All accountants"], ...members.map((m) => [m.id, m.name])];
-  const clientOpts = [["all", "All clients"], ...CLIENTS.map((c) => [c.id, `${c.code} · ${c.name}`])];
 
   const periods = {
     day: ["Daily · last 14 days", SERIES_14D, ["24 Sep", "25", "26", "27", "28", "29", "30", "1 Oct", "2", "3", "4", "5", "6", "Today"]],
@@ -63,11 +63,11 @@ VIEWS.dashboard = () => {
   `, { sub: `${open.length} open tickets` });
 
   const attention = [
-    ...list.filter((t) => t.status === "pending" && t.transferTo === u.id).map((t) => ["pend", "swap", `Accept transfer: ${t.subject}`, `${t.id} · from ${user(t.transferBy).name} · ${t.transferReason}`, t.id, "Review"]),
-    ...overdue.map((t) => ["crit", "alert", t.subject, `${t.id} · ${slaInfo(t).main} · ${user(t.owner).name}`, t.id, "Open"]),
-    ...list.filter((t) => t.status === "reopened").map((t) => ["warn", "reopen", `Reopened by client: ${t.subject}`, `${t.id} · escalated to ${user(t.escalation).name}`, t.id, "Open"]),
-    ...(state.role !== "member" ? awaiting.map((t) => ["info", "usercheck", `Approve closure: ${t.subject}`, `${t.id} · resolved by ${user(t.owner).name}`, t.id, "Review"]) : []),
-    ...list.filter((t) => t.status === "pending" && t.transferTo !== u.id).map((t) => ["pend", "swap", `Transfer not yet accepted: ${t.subject}`, `${t.id} · ${user(t.owner).name} → ${user(t.transferTo).name}`, t.id, "Open"]),
+    ...list.filter((t) => t.status === "pending" && t.transferTo === u.id).map((t) => ["pend", "swap", `Accept transfer: ${t.subject}`, `${t.id} · ${clientName(t.client)} · from ${user(t.transferBy).name} · ${t.transferReason}`, t.id, "Review"]),
+    ...overdue.map((t) => ["crit", "alert", t.subject, `${t.id} · ${slaInfo(t).main} · ${clientName(t.client)} · ${user(t.owner).name}`, t.id, "Open"]),
+    ...list.filter((t) => t.status === "reopened").map((t) => ["warn", "reopen", `Reopened by client: ${t.subject}`, `${t.id} · ${clientName(t.client)} · escalated to ${user(t.escalation).name}`, t.id, "Open"]),
+    ...(state.role !== "member" ? awaiting.map((t) => ["info", "usercheck", `Approve closure: ${t.subject}`, `${t.id} · ${clientName(t.client)} · resolved by ${user(t.owner).name}`, t.id, "Review"]) : []),
+    ...list.filter((t) => t.status === "pending" && t.transferTo !== u.id).map((t) => ["pend", "swap", `Transfer not yet accepted: ${t.subject}`, `${t.id} · ${clientName(t.client)} · ${user(t.owner).name} → ${user(t.transferTo).name}`, t.id, "Open"]),
   ].slice(0, 7);
   const attentionPanel = panel("Needs attention", `<div class="alist">${attention.map(([c, ic, ti, meta, id, cta]) => `<div class="alist__item" data-href="#ticket-${id}"><span class="alist__icon alist__icon--${c}">${icon(ic, "icon--sm")}</span><div style="min-width:0"><div class="alist__title">${esc(ti)}</div><div class="alist__meta">${esc(meta)}</div></div><span class="btn btn--sm">${cta}</span></div>`).join("") || `<div class="empty">Nothing needs you right now.</div>`}</div>`, { flush: true, sub: "Escalations, transfers and approvals waiting on someone" });
 
@@ -92,13 +92,31 @@ VIEWS.dashboard = () => {
       const load = Math.min(100, o * 22 + od * 10);
       return `<tr><td>${person(m.id, m.title)}</td><td class="t-right num">${o}</td><td class="t-right num" style="color:${od ? "var(--crit)" : "inherit"};font-weight:${od ? 600 : 400}">${od}</td><td class="t-right num">${pin}</td><td class="t-right num">${res}</td><td style="width:160px">${meter(load, load > 80 ? "meter--crit" : load > 55 ? "meter--warn" : "")}</td></tr>`;
     }).join("");
+    let workload;
+    if (state.dashOwner !== "all") {
+      const who = user(state.dashOwner);
+      const ids = [...new Set([...CLIENTS.filter((c) => c.owner === who.id || c.backup === who.id || Object.values(c.providers).includes(who.id)).map((c) => c.id), ...TICKETS.filter((t) => t.owner === who.id || (t.subs || []).some((s) => s.owner === who.id)).map((t) => t.client)])];
+      const cl = ids.map(client).sort((a, b) => (hasGroup(a) ? a.group : "~" + a.name).localeCompare(hasGroup(b) ? b.group : "~" + b.name));
+      const crow = cl.map((c) => {
+        const mt = TICKETS.filter((t) => t.client === c.id && (t.owner === who.id || (t.subs || []).some((s) => s.owner === who.id)));
+        const o = mt.filter(isOpen).length, od = mt.filter(isOverdue).length;
+        const pin = TICKETS.filter((t) => t.client === c.id && t.transferTo === who.id).length;
+        const res = mt.filter((t) => t.status === "resolved").length;
+        const role = c.owner === who.id ? "Owner" : c.backup === who.id ? "Backup" : Object.entries(c.providers).find(([, v]) => v === who.id) ? Object.entries(c.providers).find(([, v]) => v === who.id)[0] : "Ticket";
+        const load = Math.min(100, o * 30 + od * 15);
+        return `<tr class="is-link" data-href="#client-${c.id}"><td>${clientCell(c.id)}</td><td><span class="tag">${role}</span></td><td class="t-right num">${o}</td><td class="t-right num" style="color:${od ? "var(--crit)" : "inherit"};font-weight:${od ? 600 : 400}">${od}</td><td class="t-right num">${pin}</td><td class="t-right num">${res}</td><td style="width:90px">${meter(load, load > 80 ? "meter--crit" : load > 55 ? "meter--warn" : "")}</td></tr>`;
+      }).join("");
+      workload = panel(`${esc(who.name)} · clients`, `<div class="table-wrap"><table class="table"><thead><tr><th>Client</th><th>Role</th><th class="t-right">Open</th><th class="t-right">Overdue</th><th class="t-right">To accept</th><th class="t-right">Resolved</th><th>Load</th></tr></thead><tbody>${crow}</tbody></table></div>`, { flush: true, sub: `${cl.length} clients this person owns, backs up or serves`, actions: `<button class="btn btn--sm btn--ghost" data-action="clear-owner">${icon("x", "icon--sm")}Show whole team</button>` });
+    } else {
+      workload = panel("Team workload", `<div class="table-wrap"><table class="table"><thead><tr><th>Member</th><th class="t-right">Open</th><th class="t-right">Overdue</th><th class="t-right">To accept</th><th class="t-right">Resolved</th><th>Load</th></tr></thead><tbody>${rows}</tbody></table></div>`, { flush: true, sub: "Pick an accountant above to see their clients" });
+    }
     lower = `<div class="grid grid--wide-narrow">
-      ${panel("Team workload", `<div class="table-wrap"><table class="table"><thead><tr><th>Member</th><th class="t-right">Open</th><th class="t-right">Overdue</th><th class="t-right">To accept</th><th class="t-right">Resolved</th><th>Load</th></tr></thead><tbody>${rows}</tbody></table></div>`, { flush: true, sub: "Open work per person, internal and external" })}
+      ${workload}
       ${attentionPanel}
     </div>`;
   }
 
-  return `${pageHead(title, sub, `${state.role === "member" ? "" : selectEl("dash-owner", ownerOpts, state.dashOwner, "dashOwner")}${selectEl("dash-client", clientOpts, state.dashClient, "dashClient")}`)}
+  return `${pageHead(title, sub, `${state.role === "member" ? "" : `${selectEl("dash-owner", ownerOpts, state.dashOwner, "dashOwner")}<span class="or-sep">or</span>`}${clientSelect("dash-client", state.dashClient, "dashClient")}`)}
     ${kpis}
     <div class="grid grid--wide-narrow">${volume}${slaPanel}</div>
     ${state.role === "member" ? attentionPanel : ""}
@@ -400,15 +418,22 @@ VIEWS.tasks = () => {
    Clients (#17, #26, #28, #29)
    --------------------------------------------------------------------- */
 VIEWS.clients = () => {
-  const rows = CLIENTS.map((c) => {
-    const ts = TICKETS.filter((t) => t.client === c.id);
-    const tasks = TASKS.filter((t) => t.client === c.id);
-    const done = tasks.filter((t) => t.status === "done").length;
-    return `<tr class="is-link" data-href="#client-${c.id}"><td><div class="t-title">${esc(c.name)}<small>${c.kind} · ${esc(c.group)}</small></div></td><td class="t-id">${c.code}</td><td>${tierTag(c.tier)}</td><td>${person(c.manager)}</td><td>${person(c.owner)}</td><td><div class="row" style="gap:4px">${c.engagements.map((e) => `<span class="tag">${e}</span>`).join("")}</div></td><td class="t-right num">${ts.filter(isOpen).length}${ts.some(isOverdue) ? ` <span class="pill pill--crit pill--plain">${ts.filter(isOverdue).length} overdue</span>` : ""}</td><td style="min-width:120px">${tasks.length ? `<div class="row" style="gap:8px;flex-wrap:nowrap">${meter(done / tasks.length * 100)}<span class="muted num" style="font-size:var(--fs-xs)">${done}/${tasks.length}</span></div>` : '<span class="muted">—</span>'}</td></tr>`;
-  }).join("");
+  const stats = (list) => {
+    const ts = TICKETS.filter((t) => list.some((c) => c.id === t.client));
+    const tasks = TASKS.filter((t) => list.some((c) => c.id === t.client));
+    return { open: ts.filter(isOpen).length, over: ts.filter(isOverdue).length, tasks: tasks.length, done: tasks.filter((t) => t.status === "done").length };
+  };
+  const openCell = (s) => `<td class="t-right num">${s.open}${s.over ? ` <span class="pill pill--crit pill--plain">${s.over} overdue</span>` : ""}</td>`;
+  const taskCell = (s) => `<td style="min-width:120px">${s.tasks ? `<div class="row" style="gap:8px;flex-wrap:nowrap">${meter(s.done / s.tasks * 100)}<span class="muted num" style="font-size:var(--fs-xs)">${s.done}/${s.tasks}</span></div>` : '<span class="muted">—</span>'}</td>`;
+  const clientRow = (c, child) => `<tr class="is-link ${child ? "child-row" : ""}" data-href="#client-${c.id}"><td><div class="t-title">${esc(c.name)}<small>${c.kind}</small></div></td><td class="t-id">${c.code}</td><td>${tierTag(c.tier)}</td><td>${person(c.manager)}</td><td>${person(c.owner)}</td><td><div class="row" style="gap:4px">${c.engagements.map((e) => `<span class="tag">${e}</span>`).join("")}</div></td>${openCell(stats([c]))}${taskCell(stats([c]))}</tr>`;
+  const { groups, standalone } = clientGroups();
+  const rows = groups.map((g) => {
+    const s = stats(g.clients), shut = state.collapsedGroups[g.name];
+    return `<tr class="group-row ${shut ? "is-collapsed" : ""}"><td colspan="6"><button class="group-toggle" data-action="toggle-group" data-val="${esc(g.name)}" aria-expanded="${!shut}">${icon("down", "icon--sm")}${icon("building", "icon--sm")}${esc(g.name)}<span class="tab__n">${g.clients.length} ${g.clients.length > 1 ? "companies" : "company"}</span></button></td>${openCell(s)}${taskCell(s)}</tr>${shut ? "" : g.clients.map((c) => clientRow(c, true)).join("")}`;
+  }).join("") + `<tr class="section-row"><td colspan="8">Standalone clients · ${standalone.length}</td></tr>` + standalone.map((c) => clientRow(c, false)).join("");
   return `${pageHead("Clients", "Client master: SLA tier, partner, manager, owners and service providers. This mapping drives ticket routing and task generation.",
       `<button class="btn" data-action="export">${icon("download", "icon--sm")}Import / export</button><button class="btn btn--primary" data-action="new-client">${icon("plus", "icon--sm")}Add client</button>`)}
-    <section class="panel"><div class="row row--between" style="padding:14px 20px"><div class="filterbar">${["All", "Key", "Retainer", "Standard"].map((x, i) => `<button class="chip ${i === 0 ? "is-active" : ""}">${x}</button>`).join("")}</div><span class="muted" style="font-size:var(--fs-sm)">${CLIENTS.length} clients · ${new Set(CLIENTS.map((c) => c.group).filter((g) => g !== "—")).size} groups</span></div>
+    <section class="panel"><div class="row row--between" style="padding:14px 20px"><div class="filterbar">${["All", "Key", "Retainer", "Standard"].map((x, i) => `<button class="chip ${i === 0 ? "is-active" : ""}">${x}</button>`).join("")}</div><span class="muted" style="font-size:var(--fs-sm)">${CLIENTS.length} clients · ${clientGroups().groups.length} groups</span></div>
     <div class="table-wrap"><table class="table"><thead><tr><th>Client</th><th>Code</th><th>Tier</th><th>Manager</th><th>Owner</th><th>Engagements</th><th class="t-right">Open tickets</th><th>Tasks (Oct)</th></tr></thead><tbody>${rows}</tbody></table></div></section>`;
 };
 
@@ -462,14 +487,25 @@ VIEWS.reports = () => {
   } else {
     const dims = { accountant: USERS.filter((u) => u.role === "member" && u.active).map((u) => [u.name, u.title]), client: CLIENTS.map((c) => [c.name, c.code]), engagement: ["GST", "TDS", "Income Tax", "ROC", "Audit", "PF/ESI", "Accounting"].map((e) => [e, "Engagement type"]), provider: ["CS", "GST", "Income Tax", "Auditor", "PF Consultant"].map((e) => [e, "Service provider"]) }[state.analyticsDim];
     const scale = { day: 0.05, week: 0.25, month: 1, quarter: 3, custom: periodDays() / 30 }[state.period];
-    const rows = dims.map(([n, m], i) => { const seed = (n.length * 7 + i * 13) % 17; return { n, m, vol: Math.max(1, Math.round((18 + seed * 4) * scale)), frt: (1.1 + (seed % 7) * 0.45).toFixed(1), res: 82 + (seed % 15), tat: (3 + (seed % 9) * 1.3).toFixed(1), reo: ((seed % 5) * 1.4).toFixed(1) }; });
-    const maxF = Math.max(...rows.map((r) => +r.frt));
+    let rows = dims.map(([n, m], i) => { const seed = (n.length * 7 + i * 13) % 17; return { n, m, vol: Math.max(1, Math.round((18 + seed * 4) * scale)), frt: (1.1 + (seed % 7) * 0.45).toFixed(1), res: 82 + (seed % 15), tat: (3 + (seed % 9) * 1.3).toFixed(1), reo: ((seed % 5) * 1.4).toFixed(1) }; });
+    if (state.analyticsDim === "client") {
+      // Group level first, then its companies; standalone clients after
+      const byName = Object.fromEntries(rows.map((r) => [r.n, r]));
+      const { groups, standalone } = clientGroups();
+      const agg = (list) => { const v = list.reduce((a, r) => a + r.vol, 0); const w = (k, d = 1) => (list.reduce((a, r) => a + +r[k] * r.vol, 0) / v).toFixed(d); return { vol: v, frt: w("frt"), res: Math.round(w("res", 0)), tat: w("tat"), reo: w("reo") }; };
+      rows = [
+        ...groups.flatMap((g) => { const kids = g.clients.map((c) => ({ ...byName[c.name], m: c.code, level: "child" })); return [{ n: g.name, m: `Group · ${g.clients.length} ${g.clients.length > 1 ? "companies" : "company"}`, level: "group", ...agg(kids) }, ...kids]; }),
+        ...standalone.map((c) => ({ ...byName[c.name], m: `${c.code} · standalone`, level: "solo" })),
+      ];
+    }
+    const bars = rows.filter((r) => r.level !== "child");
+    const maxF = Math.max(...bars.map((r) => +r.frt));
     body = `<div class="grid grid--wide-narrow">
       ${panel("Breakdown", `<div class="table-wrap"><table class="table"><thead><tr><th>${{ accountant: "Accountant", client: "Client", engagement: "Engagement", provider: "Service provider" }[state.analyticsDim]}</th><th class="t-right">Volume</th><th class="t-right">Median 1st response</th><th class="t-right">Resolved in SLA</th><th class="t-right">Avg TAT</th><th class="t-right">Reopen rate</th></tr></thead><tbody>
-        ${rows.map((r) => `<tr><td><div class="t-title">${esc(r.n)}<small>${esc(r.m)}</small></div></td><td class="t-right num">${r.vol}</td><td class="t-right num">${r.frt} h</td><td class="t-right num" style="color:${r.res < 88 ? "var(--warn)" : "inherit"}">${r.res}%</td><td class="t-right num">${r.tat} h</td><td class="t-right num">${r.reo}%</td></tr>`).join("")}
+        ${rows.map((r) => `<tr class="${r.level === "group" ? "group-row" : r.level === "child" ? "child-row" : ""}"><td><div class="t-title" ${r.level === "group" ? 'style="font-weight:600"' : ""}>${r.level === "group" ? `<span class="group-label">${icon("building", "icon--xs")}Group</span><br>` : ""}${esc(r.n)}<small>${esc(r.m)}</small></div></td><td class="t-right num">${r.vol}</td><td class="t-right num">${r.frt} h</td><td class="t-right num" style="color:${r.res < 88 ? "var(--warn)" : "inherit"}">${r.res}%</td><td class="t-right num">${r.tat} h</td><td class="t-right num">${r.reo}%</td></tr>`).join("")}
       </tbody></table></div>`, { flush: true, sub: periodLabel(), actions: segmented([["accountant", "Accountant"], ["client", "Client"], ["engagement", "Engagement"], ["provider", "Provider"]], state.analyticsDim, "analyticsDim") })}
-      ${panel("Median first response", `<div class="stack">${rows.map((r) => `<div class="hbar" data-tip="${esc(r.n)}: ${r.frt} h median first response"><span class="hbar__label">${esc(r.n)}</span><span class="hbar__track"><span class="hbar__fill ${+r.frt > 3 ? "hbar__fill--warn" : ""}" style="display:block;width:${(+r.frt / maxF) * 100}%"></span></span><span class="hbar__val">${r.frt} h</span></div>`).join("")}</div>
-        <div class="legend" style="margin-top:14px"><span><span class="legend__sw" style="background:var(--brand)"></span>Within 3 h target</span><span><span class="legend__sw" style="background:var(--warn)"></span>Above target</span></div>`, { sub: `Hours · ${periodLabel()}` })}
+      ${panel("Median first response", `<div class="stack">${bars.map((r) => `<div class="hbar" data-tip="${esc(r.n)}: ${r.frt} h median first response"><span class="hbar__label">${esc(r.n)}</span><span class="hbar__track"><span class="hbar__fill ${+r.frt > 3 ? "hbar__fill--warn" : ""}" style="display:block;width:${(+r.frt / maxF) * 100}%"></span></span><span class="hbar__val">${r.frt} h</span></div>`).join("")}</div>
+        <div class="legend" style="margin-top:14px"><span><span class="legend__sw" style="background:var(--brand)"></span>Within 3 h target</span><span><span class="legend__sw" style="background:var(--warn)"></span>Above target</span></div>`, { sub: `Hours · ${state.analyticsDim === "client" ? "by group and standalone client · " : ""}${periodLabel()}` })}
     </div>`;
   }
   return `${pageHead("Reports", "Exceptions for follow-up, and performance by accountant, client, engagement type and service provider.", periodPicker())}

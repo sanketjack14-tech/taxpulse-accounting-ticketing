@@ -28,6 +28,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .icon { width: 18px; height: 18px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
 .icon--sm { width: 15px; height: 15px; }
+.icon--xs { width: 12px; height: 12px; }
 .icon--lg { width: 22px; height: 22px; }
 
 /* ---------- Shell ---------- */
@@ -266,12 +267,22 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .tkt-no--sub { font-size: var(--fs-xs); color: var(--ink-2); margin-left: 14px; }
 .tkt-no--sm { font-size: var(--fs-xs); }
 .tkt-no--lg { font-size: var(--fs-md); padding: 3px 10px; background: var(--brand-soft); color: var(--brand); border-color: transparent; }
+.group-label { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--brass); }
+.or-sep { font-size: var(--fs-xs); font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); padding: 0 2px; }
+.group-row td { background: var(--surface-2); }
+.group-row .group-toggle { display: inline-flex; align-items: center; gap: 8px; border: 0; background: none; padding: 0; cursor: pointer; font-weight: 600; font-size: var(--fs-md); color: var(--ink); text-align: left; }
+.group-row .group-toggle .icon { transition: transform .15s; color: var(--ink-3); }
+.group-row.is-collapsed .group-toggle .icon { transform: rotate(-90deg); }
+.child-row td:first-child { padding-left: 46px; }
+.child-row .t-title { position: relative; }
+.child-row .t-title::before { content: "└"; position: absolute; left: -18px; top: 0; color: var(--ink-3); font-weight: 400; }
+.section-row td { background: var(--surface-2); font-size: var(--fs-xs); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); padding-top: 9px; padding-bottom: 9px; }
 .t-id { font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--ink-3); white-space: nowrap; }
 .sub-row td { background: var(--surface-2); }
 .sub-row .t-title { padding-left: 18px; position: relative; }
 .sub-row .t-title::before { content: "↳"; position: absolute; left: 0; color: var(--ink-3); }
 
-.meter { height: 6px; border-radius: 99px; background: var(--surface-3); overflow: hidden; min-width: 80px; }
+.meter { height: 6px; border-radius: 99px; background: var(--surface-3); overflow: hidden; min-width: 60px; }
 .meter > i { display: block; height: 100%; border-radius: 99px; background: var(--brand); }
 .meter--warn > i { background: var(--warn); } .meter--crit > i { background: var(--crit); }
 

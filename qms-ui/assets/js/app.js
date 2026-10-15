@@ -224,6 +224,8 @@ const actions = {
     ["info", "link", "New follow-up on TKT-1044 from Oakridge", "50 min ago", "TKT-1044"],
   ].map(([c, ic, t, m, id]) => `<div class="alist__item" data-href="#ticket-${id}"><span class="alist__icon alist__icon--${c}">${icon(ic, "icon--sm")}</span><div><div class="alist__title" style="white-space:normal">${t}</div><div class="alist__meta">${m}</div></div><span></span></div>`).join("")}</div>`, `<button class="btn" data-action="close-sheet">Close</button>`)),
   "close-sheet": closeSheet,
+  "clear-owner": () => { state.dashOwner = "all"; render(); },
+  "toggle-group": (g) => { state.collapsedGroups[g] = !state.collapsedGroups[g]; render(); },
   period: (v) => { state.period = v; render(); },
   ticketTab: (v) => { state.ticketTab = v; render(); },
   ticketChannel: (v) => { state.ticketChannel = v; render(); },
@@ -333,7 +335,10 @@ document.addEventListener("change", (e) => {
   const k = e.target.dataset.change;
   if (!k) return;
   state[k] = e.target.value;
-  if (k === "role") { state.dashOwner = "all"; store.set("role", e.target.value); }
+  if (k === "role") { state.dashOwner = "all"; state.dashClient = "all"; store.set("role", e.target.value); }
+  // Dashboard filters are either/or: picking an accountant clears the client and vice versa
+  if (k === "dashOwner" && e.target.value !== "all") state.dashClient = "all";
+  if (k === "dashClient" && e.target.value !== "all") state.dashOwner = "all";
   if ((k === "customFrom" || k === "customTo") && state.customFrom > state.customTo) [state.customFrom, state.customTo] = [state.customTo, state.customFrom];
   render();
 });
