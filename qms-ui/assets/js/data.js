@@ -1,5 +1,5 @@
 /* =====================================================================
-   Ledger — QMS sample data (prototype only).
+   Ticketing Solution — sample data (prototype only).
    Shapes here mirror the proposed backend entities; see README.md.
    "Now" is fixed so SLA timers render deterministically.
    ===================================================================== */

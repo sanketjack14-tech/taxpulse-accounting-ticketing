@@ -1,5 +1,5 @@
 /* =====================================================================
-   Ledger — QMS screens. One function per route; each returns HTML.
+   Ticketing Solution — screens. One function per route; each returns HTML.
    Scope references (#n) point to rows in "QMS - Scope.xlsx".
    ===================================================================== */
 
@@ -572,7 +572,7 @@ VIEWS.logs = () => {
    --------------------------------------------------------------------- */
 VIEWS.login = (mode) => `<div class="login">
   <section class="login__art">
-    <div class="brand" style="padding:0"><span class="brand__mark">L</span><div><div class="brand__name">Ledger</div><div class="brand__sub">Query management</div></div></div>
+    <div class="brand" style="padding:0"><span class="brand__mark">T</span><div><div class="brand__name">Ticketing Solution</div><div class="brand__sub">Query management</div></div></div>
     <p class="login__quote">Every client query, <em>owned</em> and answered on time.</p>
     <div class="ledger-preview" aria-hidden="true">
       ${TICKETS.slice(0, 3).map((t) => `<div class="ledger-preview__row">${slaCue(t, { ringOnly: true })}<span style="min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(t.subject)}</span><span class="t-id">${t.id}</span></div>`).join("")}

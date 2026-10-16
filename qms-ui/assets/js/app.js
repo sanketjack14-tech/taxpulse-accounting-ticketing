@@ -1,5 +1,5 @@
 /* =====================================================================
-   Ledger — QMS shell: navigation, routing, events and dialogs.
+   Ticketing Solution — shell: navigation, routing, events and dialogs.
    Routes are bare hash tokens: #dashboard, #ticket-TKT-1048, #client-c1
    ===================================================================== */
 
@@ -73,7 +73,7 @@ function renderShell(route, content) {
   const dark = document.documentElement.dataset.theme === "dark" || (!document.documentElement.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches);
   return `<div class="shell" id="shell">
     <aside class="sidebar" aria-label="Main navigation">
-      <div class="brand"><span class="brand__mark">L</span><div><div class="brand__name">Ledger</div><div class="brand__sub">Mehta &amp; Associates</div></div></div>
+      <div class="brand"><span class="brand__mark">T</span><div><div class="brand__name">Ticketing Solution</div><div class="brand__sub">Mehta &amp; Associates</div></div></div>
       <nav>${nav}</nav>
       <div class="sidebar__foot">
         <div class="channel-health">

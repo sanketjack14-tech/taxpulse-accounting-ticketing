@@ -1,4 +1,4 @@
-# Ledger — Query Management System (UI prototype)
+# Ticketing Solution — Query Management System (UI prototype)
 
 A clickable, high-fidelity UI prototype for the client's QMS, built from **QMS - Scope.xlsx**.
 It lives in its own folder and doesn't share code with the existing TaxPulse app in the repo root.

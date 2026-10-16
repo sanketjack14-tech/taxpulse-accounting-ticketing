@@ -1,5 +1,5 @@
 /* =====================================================================
-   Ledger — QMS core: state, lookups, formatters and shared components.
+   Ticketing Solution — core: state, lookups, formatters and shared components.
    Each component is a pure function returning an HTML string so it maps
    1:1 to a React/Vue/Angular component during build.
    ===================================================================== */
