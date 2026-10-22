@@ -393,24 +393,32 @@ VIEWS.ticket = (id) => {
    Tasks & compliance (#25–#28, #30)
    --------------------------------------------------------------------- */
 VIEWS.tasks = () => {
-  const tabsHtml = tabs([["calendar", "Compliance calendar"], ["recurring", "Recurring tasks", TASKS.filter((t) => t.kind === "Recurring").length], ["onboarding", "Onboarding tasks", TASKS.filter((t) => t.kind === "Onboarding").length]], state.tasksTab, "tasksTab");
+  const tabsHtml = tabs([["calendar", "Upcoming tasks"], ["recurring", "Recurring tasks", TASKS.filter((t) => t.kind === "Recurring").length], ["onboarding", "Onboarding tasks", TASKS.filter((t) => t.kind === "Onboarding").length]], state.tasksTab, "tasksTab");
   let body;
   if (state.tasksTab === "calendar") {
-    const first = new Date(2026, 9, 1);
-    const offset = (first.getDay() + 6) % 7;
+    // Upcoming tasks: today plus the next 4 weeks, laid out Monday to Sunday
+    const DAY = 86400000, today = new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate());
+    const end = new Date(today.getTime() + 28 * DAY);
+    const start = new Date(today.getTime() - ((today.getDay() + 6) % 7) * DAY);
+    const weeks = Math.ceil(((end - start) / DAY + 1) / 7);
+    const evDate = (e) => new Date(2026, (e.month || 10) - 1, e.day);
     const cells = [];
-    for (let i = 0; i < 35; i++) {
-      const d = i - offset + 1;
-      const inMonth = d >= 1 && d <= 31;
-      const evs = inMonth ? COMPLIANCE.filter((e) => e.day === d) : [];
-      const label = inMonth ? d : d < 1 ? 30 + d : d - 31;
-      cells.push(`<div class="cal__day ${inMonth ? "" : "cal__day--out"} ${d === 7 ? "cal__day--today" : ""}"><span class="cal__date">${label}${d === 7 ? " · Today" : ""}</span>${evs.map((e) => {
-        const cls = e.status === "overdue" ? "crit" : e.done === e.clients ? "ok" : d <= 11 ? "warn" : "";
+    for (let i = 0; i < weeks * 7; i++) {
+      const d = new Date(start.getTime() + i * DAY);
+      const inWin = d >= today && d <= end;
+      const isToday = d.getTime() === today.getTime();
+      const evs = inWin ? COMPLIANCE.filter((e) => evDate(e).getTime() === d.getTime()) : [];
+      const label = d.getDate() === 1 || i === 0 ? d.toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : d.getDate();
+      cells.push(`<div class="cal__day ${inWin ? "" : "cal__day--out"} ${isToday ? "cal__day--today" : ""}"><span class="cal__date">${label}${isToday ? " · Today" : ""}</span>${evs.map((e) => {
+        const soon = (evDate(e) - today) / DAY <= 5;
+        const cls = e.done === e.clients ? "ok" : soon ? "warn" : "";
         return `<span class="cal__ev ${cls ? "cal__ev--" + cls : ""}" data-tip="${esc(e.title)} · ${e.done}/${e.clients} clients done">${esc(e.title)} <b class="num">${e.done}/${e.clients}</b></span>`;
       }).join("")}</div>`);
     }
-    body = `<div class="row row--between" style="padding:16px 20px"><div class="row"><button class="iconbtn" aria-label="Previous month">${icon("left")}</button><h2 style="font-family:var(--font-display);font-weight:500;font-size:var(--fs-xl)">October 2026</h2><button class="iconbtn" aria-label="Next month">${icon("right")}</button></div>
-      <div class="legend"><span><span class="legend__sw" style="background:var(--crit)"></span>Overdue</span><span><span class="legend__sw" style="background:var(--warn)"></span>Due within 5 days</span><span><span class="legend__sw" style="background:var(--ok)"></span>All clients done</span><span><span class="legend__sw" style="background:var(--line-strong)"></span>Upcoming</span></div></div>
+    const overdue = COMPLIANCE.filter((e) => evDate(e) < today && e.done < e.clients);
+    body = `<div class="row row--between" style="padding:16px 20px"><div><h2 style="font-family:var(--font-display);font-weight:500;font-size:var(--fs-xl)">Upcoming tasks</h2><p class="muted" style="font-size:var(--fs-sm)">Today to ${fmtDay(end)} · next 4 weeks</p></div>
+      <div class="legend"><span><span class="legend__sw" style="background:var(--warn)"></span>Due within 5 days</span><span><span class="legend__sw" style="background:var(--ok)"></span>All clients done</span><span><span class="legend__sw" style="background:var(--line-strong)"></span>Later</span></div></div>
+      ${overdue.length ? `<div style="padding:0 20px 16px"><div class="banner banner--crit"><span class="banner__icon">${icon("alert")}</span><div class="banner__body"><span class="banner__title">${overdue.length} overdue from before today</span><span class="banner__text">${overdue.map((e) => `${esc(e.title)} (due ${fmtDay(evDate(e), false)}, ${e.done}/${e.clients} clients done)`).join(" · ")}</span></div></div></div>` : ""}
       <div class="table-wrap"><div class="cal" style="min-width:640px">${["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => `<div class="cal__dow">${d}</div>`).join("")}${cells.join("")}</div></div>`;
   } else {
     const kind = state.tasksTab === "recurring" ? "Recurring" : "Onboarding";

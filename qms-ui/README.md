@@ -88,7 +88,7 @@ qms-ui/
 | 27 | Recurring tasks | Tasks → Recurring, calendar, "Generate November cycle" |
 | 28 | Client-level customisation | Client detail → Task plan toggles, Modify, Add |
 | 29 | User and client access | Users & access, client Deactivate |
-| 30 | Statutory compliance tracker | Tasks → Compliance calendar |
+| 30 | Statutory compliance tracker | Tasks → Upcoming tasks (today + 4 weeks, overdue items flagged above) |
 | 36–40 | Roles | "Viewing as" switcher and role-based navigation |
 | 41–43 | Login | `#login`, `#forgot`, Microsoft button |
 | 47 | Mobile responsive | Off-canvas nav and stacked layouts below 900px |

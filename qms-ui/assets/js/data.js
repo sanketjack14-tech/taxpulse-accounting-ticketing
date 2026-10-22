@@ -152,6 +152,8 @@ const COMPLIANCE = [
   { day: 31, title: "ITR (audit cases)", clients: 3, done: 0, status: "due" },
   { day: 5, title: "Advance tax follow-up", clients: 2, done: 1, status: "overdue" },
   { day: 1, title: "MSME-1 (Apr–Sep)", clients: 1, done: 0, status: "overdue" },
+  { month: 11, day: 2, title: "TDS certificates 16A — Q2", clients: 7, done: 0, status: "due" },
+  { month: 11, day: 4, title: "DSC renewal — Vertex director", clients: 1, done: 0, status: "due" },
 ];
 
 const TASKS = [
