@@ -268,6 +268,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .tkt-no--sm { font-size: var(--fs-xs); }
 .tkt-no--lg { font-size: var(--fs-md); padding: 3px 10px; background: var(--brand-soft); color: var(--brand); border-color: transparent; }
 .group-label { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--brass); }
+.attn-top { display: none; }
+.select:disabled { background: var(--surface-3); color: var(--ink-2); cursor: not-allowed; opacity: 1; }
 .or-sep { font-size: var(--fs-xs); font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); padding: 0 2px; }
 .group-row td { background: var(--surface-2); }
 .group-row .group-toggle { display: inline-flex; align-items: center; gap: 8px; border: 0; background: none; padding: 0; cursor: pointer; font-weight: 600; font-size: var(--fs-md); color: var(--ink); text-align: left; }
@@ -565,11 +567,18 @@ button, input, select, textarea { font: inherit; color: inherit; }
   .page { padding: 20px 16px 48px; }
   .grid--2 { grid-template-columns: minmax(0, 1fr); }
   .me__text, .role-switch label, .kbd { display: none; }
+  .role-switch { min-width: 0; flex: 1; justify-content: flex-end; }
+  .role-switch select { max-width: 100%; min-width: 0; text-overflow: ellipsis; }
+  .topbar { gap: 8px; }
+  .topbar__spacer { display: none; }
   .login { grid-template-columns: minmax(0, 1fr); }
   .login__art { padding: 32px 24px; }
   .ledger-preview { display: none; }
 }
 @media (max-width: 700px) {
+  /* Phone: Needs attention moves to the top of the dashboard */
+  .attn-top { display: block; }
+  .attn-inline { display: none; }
   /* Phone: list first; tapping a message opens it full-width with a back button */
   .inbox__list { max-height: none; border-bottom: 0; }
   .inbox:not(.is-detail) .inbox__detail { display: none; }

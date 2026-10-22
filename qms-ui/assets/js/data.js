@@ -20,12 +20,15 @@ const USERS = [
   { id: "u11", name: "Kavya Menon", initials: "KM", role: "platform", title: "Platform Admin", team: "Operations", type: "internal", email: "kavya.menon@mehtaassociates.in", active: true },
   { id: "u12", name: "Arjun Pillai", initials: "AP", role: "sysadmin", title: "System Admin (IT)", team: "IT", type: "internal", email: "it@mehtaassociates.in", active: true },
   { id: "u13", name: "Rahul Sinha", initials: "RS", role: "member", title: "Article Assistant", team: "GST & Accounting", type: "internal", email: "rahul.sinha@mehtaassociates.in", active: false },
+  { id: "u14", name: "Meera Kapoor", initials: "MK", role: "manager", title: "Manager · Payroll & Compliance", team: "Payroll & Compliance", type: "internal", email: "meera.kapoor@mehtaassociates.in", active: true },
+  { id: "u15", name: "Rohit Gupta", initials: "RG", role: "member", title: "Accountant", team: "Payroll & Compliance", type: "internal", email: "rohit.gupta@mehtaassociates.in", active: true },
 ];
 
 const CLIENTS = [
   { id: "c1", code: "SHR-001", name: "Shreeji Polymers Pvt Ltd", group: "Shreeji Group", kind: "Company", tier: "key", partner: "u1", manager: "u2", owner: "u4", backup: "u5", engagements: ["GST", "TDS", "ROC", "Statutory Audit"], providers: { CS: "u9", GST: "u4", "Income Tax": "u7", Auditor: "u7" } },
   { id: "c2", code: "SHR-002", name: "Shreeji Logistics LLP", group: "Shreeji Group", kind: "LLP", tier: "key", partner: "u1", manager: "u2", owner: "u8", backup: "u4", engagements: ["GST", "TDS", "Accounting"], providers: { GST: "u8", "Income Tax": "u6" } },
   { id: "c11", code: "SHR-003", name: "Shreeji Exports Pvt Ltd", group: "Shreeji Group", kind: "Company", tier: "key", partner: "u1", manager: "u2", owner: "u5", backup: "u4", engagements: ["GST", "Accounting"], providers: { GST: "u5" } },
+  { id: "c12", code: "ZEN-090", name: "Zenith Diagnostics Pvt Ltd", group: "—", kind: "Company", tier: "retainer", partner: "u1", manager: "u14", owner: "u15", backup: "u14", engagements: ["TDS", "PF/ESI", "Payroll"], providers: {} },
   { id: "c3", code: "KAP-014", name: "Kapoor Textiles", group: "—", kind: "Partnership", tier: "retainer", partner: "u1", manager: "u2", owner: "u5", backup: "u8", engagements: ["GST", "Accounting"], providers: { GST: "u5" } },
   { id: "c4", code: "NIL-022", name: "Nilkanth Foods Pvt Ltd", group: "—", kind: "Company", tier: "retainer", partner: "u1", manager: "u3", owner: "u6", backup: "u7", engagements: ["ROC", "Income Tax", "Accounting"], providers: { CS: "u9", "Income Tax": "u6" } },
   { id: "c5", code: "MEH-031", name: "Dr. Anand Mehra", group: "Mehra Family", kind: "Individual", tier: "standard", partner: "u1", manager: "u3", owner: "u6", backup: "u7", engagements: ["Income Tax"], providers: { "Income Tax": "u6" } },
@@ -68,6 +71,11 @@ const DEPARTMENTS = [
 ];
 
 const TICKETS = [
+  /* Owned by a manager herself */
+  { id: "TKT-1050", subject: "GST refund on inverted duty structure — approval of RFD-01 working", client: "c2", type: "GST", channel: "mail", source: "accounts@shreejilogistics.in", owner: "u2", backup: "u8", escalation: "u1", status: "progress", priority: "high", ageMin: 120, tatMin: 240, members: [] },
+  /* Meera's team has one member, so tickets go straight to Rohit */
+  { id: "TKT-1052", subject: "TDS on lab equipment AMC — 194C or 194J?", client: "c12", type: "TDS", channel: "wa", source: "Zenith – Finance", owner: "u15", backup: "u14", escalation: "u14", status: "progress", priority: "med", ageMin: 260, tatMin: 480, members: [], autoAssigned: true },
+  { id: "TKT-1051", subject: "Professional tax registration for new Pune branch", client: "c12", type: "PF / ESI", channel: "mail", source: "hr@zenithdiagnostics.in", owner: "u15", backup: "u14", escalation: "u14", status: "assigned", priority: "low", ageMin: 40, tatMin: 480, members: [], autoAssigned: true },
   /* Multi-department (nested) query: one parent, one part per department, each with its own tagged owner and SLA */
   { id: "TKT-1049", subject: "Merger of Vertex Roads into Vertex Infra — GST, tax and ROC steps", client: "c6", type: "Multi-department", channel: "mail", source: "cfo@vertexinfra.com", owner: "u7", backup: "u6", escalation: "u3", status: "progress", priority: "high", ageMin: 150, tatMin: 480, members: [], parent: true, multiDept: true,
     subs: [
@@ -182,6 +190,10 @@ const LOGS = [
 ];
 
 const HISTORY = {
+  "TKT-1051": [
+    { dot: "brand", text: "Auto-assigned to <b>Rohit Gupta</b>, the only member of Meera Kapoor's team. No manager assignment needed.", meta: "Today 10:51 · auto" },
+    { dot: "", text: "Ticket created from email (hr@zenithdiagnostics.in)", meta: "Today 10:50 · auto" },
+  ],
   "TKT-1047": [
     { dot: "pend", text: "<b>Aditya Rao</b> requested transfer to <b>Vikram Nair</b> — “Vikram handled Oakridge's lease agreement review in August.”", meta: "Today 10:05 · Awaiting acceptance" },
     { dot: "", text: "Reminder sent to <b>Vikram Nair</b> to accept", meta: "Today 11:05 · auto" },

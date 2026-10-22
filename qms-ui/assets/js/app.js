@@ -88,7 +88,7 @@ function renderShell(route, content) {
         <button class="iconbtn topbar__menu" data-action="menu" aria-label="Open menu">${icon("menu")}</button>
         <label class="search">${icon("search", "icon--sm")}<span class="sr-only">Search</span><input id="global-search" placeholder="Search tickets, clients, PAN, GSTIN…"><span class="kbd">/</span></label>
         <span class="topbar__spacer"></span>
-        <div class="role-switch"><label for="role">Viewing as</label><select id="role" data-change="role">${Object.entries(ROLES).map(([k, r]) => `<option value="${k}" ${k === state.role ? "selected" : ""}>${r.label}</option>`).join("")}</select></div>
+        <div class="role-switch"><label for="role">Viewing as</label><select id="role" data-change="persona">${Object.entries(ROLES).map(([k, r]) => `<option value="${k}" ${k === state.persona ? "selected" : ""}>${r.label}</option>`).join("")}</select></div>
         <button class="iconbtn" data-action="theme" aria-label="Toggle dark mode">${icon(dark ? "sun" : "moon")}</button>
         <button class="iconbtn" data-action="notifications" aria-label="Notifications">${icon("bell")}<span class="iconbtn__badge">4</span></button>
         <div class="me">${av(u.id)}<div class="me__text"><div class="me__name">${esc(u.name)}</div><div class="me__role">${esc(u.title)}</div></div></div>
@@ -116,10 +116,12 @@ function render() {
 function reassignDialog(id) {
   const t = findTicket(id);
   const isMgr = ["manager", "leadership"].includes(state.role);
-  const people = USERS.filter((u) => u.role === "member" && u.active && u.id !== t.owner);
+  const people = state.role === "manager"
+    ? [me(), ...teamOf(me().id), ...USERS.filter((u) => u.type === "external" && u.active)].filter((u) => u.id !== t.owner)
+    : USERS.filter((u) => u.role === "member" && u.active && u.id !== t.owner);
   openSheet(sheet("drawer", isMgr ? "Assign or reassign" : "Reassign ticket", `<span class="mono">${t.id}</span> · ${esc(t.subject)}`, `
     <div class="banner banner--pend"><span class="banner__icon">${icon("swap")}</span><div class="banner__body"><span class="banner__text">The new owner must accept. Until then the ticket stays with <b>${user(t.owner).name}</b> and shows “Pending acceptance”. If it isn't accepted in 1 hour they get a reminder; after 3 hours it escalates to ${user(t.escalation).name}.</span></div></div>
-    <div class="field"><span class="field__label">New owner</span><div class="pick" role="radiogroup">${people.map((p, i) => { const open = TICKETS.filter((x) => x.owner === p.id && isOpen(x)).length; return `<label class="pick__opt ${i === 0 ? "is-active" : ""}"><input type="radio" name="newowner" value="${p.id}" ${i === 0 ? "checked" : ""} class="sr-only">${av(p.id, "sm")}<span><span style="font-weight:500">${esc(p.name)}</span><span class="muted" style="font-size:var(--fs-xs);display:block">${esc(p.title)}${p.type === "external" ? " · notified by email" : ""}</span></span><span class="muted num" style="font-size:var(--fs-xs)">${open} open</span></label>`; }).join("")}</div></div>
+    <div class="field"><span class="field__label">New owner</span><div class="pick" role="radiogroup">${people.map((p, i) => { const open = TICKETS.filter((x) => x.owner === p.id && isOpen(x)).length; return `<label class="pick__opt ${i === 0 ? "is-active" : ""}"><input type="radio" name="newowner" value="${p.id}" ${i === 0 ? "checked" : ""} class="sr-only">${av(p.id, "sm")}<span><span style="font-weight:500">${esc(p.name)}${p.id === me().id ? " (me)" : ""}</span><span class="muted" style="font-size:var(--fs-xs);display:block">${p.id === me().id ? "Take it yourself — no acceptance needed" : esc(p.title)}${p.type === "external" ? " · notified by email" : ""}</span></span><span class="muted num" style="font-size:var(--fs-xs)">${open} open</span></label>`; }).join("")}</div></div>
     <div class="field"><label class="field__label" for="rs-reason">Reason</label><select class="select" id="rs-reason"><option>Better suited — subject expertise</option><option>Workload rebalancing</option><option>Owner on leave</option><option>Client relationship</option><option>Other</option></select></div>
     <div class="field"><label class="field__label" for="rs-note">Note for the new owner</label><textarea class="textarea" id="rs-note" placeholder="Context they need to pick this up"></textarea></div>`,
     `<button class="btn" data-action="close-sheet">Cancel</button><button class="btn btn--primary" data-action="do-reassign" data-val="${t.id}">Send transfer request</button>`));
@@ -260,6 +262,13 @@ const actions = {
   "do-reassign": (id) => {
     const t = findTicket(id);
     const to = document.querySelector('input[name="newowner"]:checked').value;
+    if (to === me().id) {
+      const prev = t.owner;
+      Object.assign(t, { owner: to, status: "assigned", transferTo: null });
+      (HISTORY[id] = HISTORY[id] || []).unshift({ dot: "brand", text: `<b>${me().name}</b> took this ticket from ${user(prev).name}`, meta: "Just now" });
+      closeSheet(); render(); toast("You now own this ticket.");
+      return;
+    }
     Object.assign(t, { status: "pending", transferTo: to, transferBy: me().id, transferReason: document.getElementById("rs-reason").value });
     closeSheet(); render();
     toast(`Transfer sent to ${user(to).name}${user(to).type === "external" ? " (by email)" : ""}. You stay the owner until they accept.`);
@@ -335,7 +344,7 @@ document.addEventListener("change", (e) => {
   const k = e.target.dataset.change;
   if (!k) return;
   state[k] = e.target.value;
-  if (k === "role") { state.dashOwner = "all"; state.dashClient = "all"; store.set("role", e.target.value); }
+  if (k === "persona") { state.role = ROLES[state.persona].role; state.dashOwner = "all"; state.dashClient = "all"; store.set("role", e.target.value); }
   // Dashboard filters are either/or: picking an accountant clears the client and vice versa
   if (k === "dashOwner" && e.target.value !== "all") state.dashClient = "all";
   if (k === "dashClient" && e.target.value !== "all") state.dashOwner = "all";
@@ -376,6 +385,6 @@ document.addEventListener("mousemove", (e) => {
 const savedTheme = store.get("theme");
 if (savedTheme) document.documentElement.dataset.theme = savedTheme;
 const savedRole = store.get("role");
-if (savedRole && ROLES[savedRole]) state.role = savedRole;
+if (savedRole && ROLES[savedRole]) { state.persona = savedRole; state.role = ROLES[savedRole].role; }
 window.addEventListener("hashchange", () => { closeSheet(); render(); window.scrollTo(0, 0); });
 render();

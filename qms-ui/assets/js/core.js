@@ -4,15 +4,19 @@
    1:1 to a React/Vue/Angular component during build.
    ===================================================================== */
 
+/* Personas in the "Viewing as" switcher. `role` decides menus and permissions. */
 const ROLES = {
-  leadership: { label: "Leadership", user: "u1" },
-  manager: { label: "Manager", user: "u2" },
-  member: { label: "Team member", user: "u4" },
-  platform: { label: "Platform admin", user: "u11" },
-  sysadmin: { label: "System admin (IT)", user: "u12" },
+  leadership: { label: "Leadership", user: "u1", role: "leadership" },
+  manager: { label: "Manager", user: "u2", role: "manager" },
+  manager_solo: { label: "Manager · 1-member team", user: "u14", role: "manager" },
+  member: { label: "Team member", user: "u4", role: "member" },
+  member_solo: { label: "Team member · 1 client", user: "u15", role: "member" },
+  platform: { label: "Platform admin", user: "u11", role: "platform" },
+  sysadmin: { label: "System admin (IT)", user: "u12", role: "sysadmin" },
 };
 
 const state = {
+  persona: "manager",
   role: "manager",
   period: "day",          // shared by Dashboard and Reports: day | week | month | quarter | custom
   customFrom: "2026-09-21",
@@ -44,7 +48,12 @@ const store = {
 const byId = (arr, id) => arr.find((x) => x.id === id);
 const user = (id) => byId(USERS, id);
 const client = (id) => byId(CLIENTS, id);
-const me = () => user(ROLES[state.role].user);
+const me = () => user(ROLES[state.persona].user);
+/* Internal team members reporting to a manager */
+const teamOf = (mgrId) => USERS.filter((x) => x.role === "member" && x.active && x.type === "internal" && x.team === user(mgrId).team);
+const isSoloTeam = () => state.role === "manager" && teamOf(me().id).length === 1;
+/* Clients a person owns, backs up or serves as a provider */
+const clientsOf = (uid) => CLIENTS.filter((c) => c.owner === uid || c.backup === uid || Object.values(c.providers).includes(uid));
 const allTickets = () => TICKETS.flatMap((t) => [t, ...(t.subs || []).map((s) => ({ ...t, ...s, parentId: t.id, subs: undefined, parent: false }))]);
 const findTicket = (id) => {
   const t = TICKETS.find((x) => x.id === id);
@@ -63,7 +72,7 @@ function scopedTickets() {
   const u = me();
   const top = TICKETS;
   if (state.role === "member") return top.filter((t) => t.owner === u.id || t.transferTo === u.id || (t.subs || []).some((s) => s.owner === u.id) || (t.members || []).includes(u.id));
-  if (state.role === "manager") return top.filter((t) => t.escalation === u.id || (t.subs || []).some((s) => user(s.owner).team === u.team));
+  if (state.role === "manager") return top.filter((t) => t.owner === u.id || t.escalation === u.id || (t.subs || []).some((s) => user(s.owner).team === u.team));
   return top;
 }
 
@@ -147,12 +156,21 @@ function clientIdsFor(v) {
   if (v.startsWith("g:")) return CLIENTS.filter((c) => c.group === v.slice(2)).map((c) => c.id);
   return [v];
 }
-function clientSelect(id, value, action) {
-  const { groups, standalone } = clientGroups();
+function clientSelect(id, value, action, only) {
+  let { groups, standalone } = clientGroups();
+  if (only) {
+    const ok = (c) => only.includes(c.id);
+    groups = groups.map((g) => ({ ...g, clients: g.clients.filter(ok) })).filter((g) => g.clients.length);
+    standalone = standalone.filter(ok);
+  }
   const o = (v, l) => `<option value="${esc(v)}" ${v === value ? "selected" : ""}>${esc(l)}</option>`;
   return `<select class="select" id="${id}" data-change="${action}" style="width:auto">${o("all", "All clients")}
     ${groups.map((g) => `<optgroup label="${esc(g.name)}">${o("g:" + g.name, `${g.name} — all ${g.clients.length} ${g.clients.length > 1 ? "companies" : "company"}`)}${g.clients.map((c) => o(c.id, `   └ ${c.name}`)).join("")}</optgroup>`).join("")}
-    <optgroup label="Standalone clients">${standalone.map((c) => o(c.id, c.name)).join("")}</optgroup></select>`;
+    ${standalone.length ? `<optgroup label="Standalone clients">${standalone.map((c) => o(c.id, c.name)).join("")}</optgroup>` : ""}</select>`;
+}
+/* A greyed-out select that just names the only possible value */
+function lockedSelect(id, label, why) {
+  return `<select class="select" id="${id}" disabled style="width:auto" title="${esc(why)}" aria-label="${esc(why)}"><option>${esc(label)}</option></select>`;
 }
 const clientName = (cid) => client(cid).name;
 

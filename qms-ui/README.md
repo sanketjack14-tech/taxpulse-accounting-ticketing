@@ -7,6 +7,8 @@ It lives in its own folder and doesn't share code with the existing TaxPulse app
 - **Leadership** sees only Dashboard and Reports (scope #38). Tiles and rows that would open a ticket are read-only for them.
 - **Reporting period:** Dashboard and Reports share one picker (Daily, Weekly, Monthly, Quarterly, Custom date range).
 - **Masters** (Clients, Task templates, SLA & escalation) are for Platform admin only.
+- **Extra personas** in "Viewing as": *Manager · 1-member team* (Meera Kapoor, whose tickets go straight to her one member) and *Team member · 1 client* (Rohit Gupta, whose client filter is locked).
+- **Managers own tickets too** and can assign to themselves or a team member when the team has more than one member.
 - **Role switcher** in the top bar ("Viewing as") shows what each role sees (scope #36–#40).
 - **Light and dark themes** from one token file. The layout is responsive down to phone width (#47).
 - All data is sample data in `assets/js/data.js`, with "now" fixed at **Wed 7 Oct 2026, 11:30 IST** so SLA timers always render the same way.

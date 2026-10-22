@@ -22,10 +22,18 @@ VIEWS.dashboard = () => {
   const scale = state.role === "member" ? 0.18 : state.role === "manager" ? 0.55 : 1;
 
   const title = state.role === "member" ? `Good morning, ${u.name.split(" ")[0]}` : state.role === "manager" ? "Team overview" : "Firm overview";
-  const sub = state.role === "member" ? "Your queue, ordered by what breaches SLA first." : state.role === "manager" ? `${u.team} · ${USERS.filter((x) => x.team === u.team && x.role === "member").length} members plus external consultants on your clients` : "All teams, all clients · Mehta & Associates, Chartered Accountants";
+  const sub = state.role === "member" ? "Your queue, ordered by what breaches SLA first." : state.role === "manager" ? `${u.team} · you and ${teamOf(u.id).length} team member${teamOf(u.id).length === 1 ? "" : "s"}, plus external consultants on your clients` : "All teams, all clients · Mehta & Associates, Chartered Accountants";
 
   const members = state.role === "member" ? [] : USERS.filter((x) => x.role === "member" && x.active && (state.role === "leadership" || x.team === u.team || TICKETS.some((t) => t.owner === x.id && t.escalation === u.id)));
-  const ownerOpts = [["all", state.role === "member" ? "Me" : "All accountants"], ...members.map((m) => [m.id, m.name])];
+  const ownerOpts = [["all", state.role === "manager" ? "Me and my team" : "All accountants"], ...(state.role === "manager" ? [[u.id, `Me (${u.name})`]] : []), ...members.map((m) => [m.id, m.name])];
+  // Filters: a single option is shown greyed out instead of as a dropdown
+  const team = state.role === "manager" ? teamOf(u.id) : [];
+  const ownerFilter = state.role === "member" ? ""
+    : team.length === 1 ? lockedSelect("dash-owner", team[0].name, "Only one member in your team")
+    : selectEl("dash-owner", ownerOpts, state.dashOwner, "dashOwner");
+  const mine = state.role === "member" ? clientsOf(u.id) : null;
+  const clientFilter = mine && mine.length === 1 ? lockedSelect("dash-client", mine[0].name, "You look after one client")
+    : clientSelect("dash-client", state.dashClient, "dashClient", mine ? mine.map((c) => c.id) : null);
 
   const periods = {
     day: ["Daily · last 14 days", SERIES_14D, ["24 Sep", "25", "26", "27", "28", "29", "30", "1 Oct", "2", "3", "4", "5", "6", "Today"]],
@@ -84,13 +92,13 @@ VIEWS.dashboard = () => {
       ${panel("My tasks this week", `<div class="alist">${tasks.map((t) => `<div class="alist__item" data-href="#tasks"><span class="alist__icon alist__icon--${t.status === "pending" ? "pend" : "info"}">${icon(t.kind === "Onboarding" ? "flag" : "repeat", "icon--sm")}</span><div style="min-width:0"><div class="alist__title">${esc(t.name)}</div><div class="alist__meta">${client(t.client).code} · due ${t.due}</div></div>${statusPill(t.status)}</div>`).join("")}</div>`, { flush: true, sub: "Recurring and onboarding tasks" })}
     </div>`;
   } else {
-    const rows = members.map((m) => {
+    const rows = [...(state.role === "manager" ? [u] : []), ...members].map((m) => {
       const mt = TICKETS.filter((t) => t.owner === m.id);
       const o = mt.filter(isOpen).length, od = mt.filter(isOverdue).length;
       const pin = TICKETS.filter((t) => t.transferTo === m.id).length;
       const res = mt.filter((t) => t.status === "resolved").length;
       const load = Math.min(100, o * 22 + od * 10);
-      return `<tr><td>${person(m.id, m.title)}</td><td class="t-right num">${o}</td><td class="t-right num" style="color:${od ? "var(--crit)" : "inherit"};font-weight:${od ? 600 : 400}">${od}</td><td class="t-right num">${pin}</td><td class="t-right num">${res}</td><td style="width:160px">${meter(load, load > 80 ? "meter--crit" : load > 55 ? "meter--warn" : "")}</td></tr>`;
+      return `<tr><td>${person(m.id, m.id === u.id ? "You · Manager" : m.title)}</td><td class="t-right num">${o}</td><td class="t-right num" style="color:${od ? "var(--crit)" : "inherit"};font-weight:${od ? 600 : 400}">${od}</td><td class="t-right num">${pin}</td><td class="t-right num">${res}</td><td style="width:160px">${meter(load, load > 80 ? "meter--crit" : load > 55 ? "meter--warn" : "")}</td></tr>`;
     }).join("");
     let workload;
     if (state.dashOwner !== "all") {
@@ -112,14 +120,15 @@ VIEWS.dashboard = () => {
     }
     lower = `<div class="grid grid--wide-narrow">
       ${workload}
-      ${attentionPanel}
+      <div class="attn-inline">${attentionPanel}</div>
     </div>`;
   }
 
-  return `${pageHead(title, sub, `${state.role === "member" ? "" : `${selectEl("dash-owner", ownerOpts, state.dashOwner, "dashOwner")}<span class="or-sep">or</span>`}${clientSelect("dash-client", state.dashClient, "dashClient")}`)}
+  return `${pageHead(title, sub, `${ownerFilter ? `${ownerFilter}<span class="or-sep">or</span>` : ""}${clientFilter}`)}
+    <div class="attn-top">${attentionPanel}</div>
     ${kpis}
     <div class="grid grid--wide-narrow">${volume}${slaPanel}</div>
-    ${state.role === "member" ? attentionPanel : ""}
+    ${state.role === "member" ? `<div class="attn-inline">${attentionPanel}</div>` : ""}
     ${lower}`;
 };
 
@@ -272,7 +281,8 @@ VIEWS.ticket = (id) => {
   const stepper = `<div class="stepper" aria-label="Status">${steps.map((l, i) => `${i ? `<span class="step__line ${i <= cur ? "is-done" : ""}"></span>` : ""}<span class="step ${i < cur || t.status === "closed" ? "is-done" : ""} ${i === cur && t.status !== "closed" ? "is-current" : ""}"><span class="step__dot">${i < cur || t.status === "closed" ? icon("check", "icon--sm") : i + 1}</span>${l}</span>`).join("")}</div>`;
 
   const actions = [];
-  if (isOpen(t) && t.status !== "pending") actions.push(`<button class="btn" data-action="reassign" data-val="${t.id}">${icon("swap", "icon--sm")}${isMgr ? "Assign / reassign" : "Reassign"}</button>`);
+  if (isOpen(t) && t.status !== "pending" && isSoloTeam()) actions.push(`<button class="btn" disabled data-tip="Your team has one member, so tickets go straight to ${teamOf(u.id)[0].name}">${icon("swap", "icon--sm")}Assign</button>`);
+  else if (isOpen(t) && t.status !== "pending") actions.push(`<button class="btn" data-action="reassign" data-val="${t.id}">${icon("swap", "icon--sm")}${isMgr ? "Assign / reassign" : "Reassign"}</button>`);
   if (isOpen(t) && t.status !== "pending" && !t.parentId) actions.push(`<button class="btn" data-action="tag-dept" data-val="${t.id}">${icon("split", "icon--sm")}Tag a department</button>`);
   const partsOpen = t.subs ? t.subs.filter((x) => !["resolved", "closed"].includes(x.status)).length : 0;
   if (isOpen(t) && t.status !== "pending") actions.push(t.multiDept && partsOpen
